@@ -21,3 +21,7 @@ check-code: lint type-check
 format:
 	poetry run ruff check --fix $(DIRS_WITH_CODE)
 	poetry run ruff format $(DIRS_WITH_CODE)
+
+pydantic-model:
+	datamodel-codegen --input .actor/input_schema.json --output $(DIRS_WITH_CODE)/model.py  --input-file-type jsonschema
+
