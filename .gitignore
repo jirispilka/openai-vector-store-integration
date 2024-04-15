@@ -29,5 +29,3 @@ dmypy.json
 # Added by Apify CLI
 node_modules
 .venv
-
-examples/**
