@@ -13,6 +13,7 @@ apify-client = "^1.6.4"
 openai = "^1.17.0"
 python = "^3.12"
 tiktoken = "^0.6.0"
+python-dotenv = "^1.0.1"
 
 [tool.poetry.group.dev.dependencies]
 datamodel-code-generator = "^0.25.5"

@@ -1,7 +1,7 @@
 import json
-import os
 from pathlib import Path
 
+from dotenv import load_dotenv
 from openai import OpenAI
 
 INSTRUCTIONS = """
@@ -21,8 +21,8 @@ PATH = Path(__file__).parent.parent / "data"
 FILE_PUBLIC_ACTORS = PATH / "dataset_public-actors-lister-apify-advisor_2024-04-09_19-23-55-381.json"
 FILE_APIFY_COM = PATH / "dataset_apify-advisor-gpt_2024-04-10_14-34-47-759.json"
 
-os.environ["OPENAI_API_KEY"] = ""
 
+load_dotenv()
 client = OpenAI()
 
 
@@ -105,30 +105,24 @@ def query_assistant(assistant_id: str, query: str):
 
 if __name__ == "__main__":
 
-    # _id = openai_assistant_actor(name="jiri-test-apify-advisor", instructions=INSTRUCTIONS, model="gpt-3.5-turbo")
-    # print(_id)
-
     import pandas as pd
+    import time
+    import os
 
-    df = pd.read_csv(
-        "/home/jirka/dokumenty/apify/apify-adviser/Apify-Advisor-sales-new-leads-Experiments-15.4-latest.csv"
-    )
-    # print(df["Message"])
+    df = pd.read_csv(str(PATH / "Apify-Advisor-Experiments-15.4-latest.csv"))
 
-    # _id = "asst_vBkIISZnPDB5d16M2rf99wDI"
-    # df["Apify Advisor - PROMPT_V3"] = ""
-    # df["latency [sec]"] = 0
-    # for index, row in df.iterrows():
-    #     print("Question:", row["Message"])
-    #     st = time.time()
-    #     r = query_assistant(_id, row["Message"])
-    #     et = time.time()
-    #     df.at[index, "Apify Advisor - PROMPT_V3"] = r
-    #     df.at[index, "latency [sec]"] = et - st
-    #     print("Response", r)
-    #     print(df)
-    #
-    # df.to_csv(
-    #     "/home/jirka/dokumenty/apify/apify-adviser/Apify-Advisor-sales-new-leads-Experiments-15.4-latest-2.csv",
-    #     index=False,
-    # )
+    _id = os.getenv("ASSISTANT_ID")
+    df["Answer"] = ""
+    df["latency [sec]"] = 0
+    for index, row in df.iterrows():
+
+        print("Question:", row["Message"])
+        st = time.time()
+        r = query_assistant(_id, row["Message"])
+        et = time.time()
+        df.at[index, "Answer"] = r
+        df.at[index, "latency [sec]"] = et - st
+        print("Response", r)
+
+    file_out = str(PATH / "Apify-Advisor--Experiments-15.4-latest-out.csv")
+    df.to_csv(file_out, index=False)

@@ -1,0 +1,14 @@
+[{
+  "url": "https://apify.com/apify/web-scraper",
+  "title": "Web Scraper",
+  "description": "Crawls arbitrary websites using the Chrome browser and extracts data from pages using a provided JavaScript code. The actor supports both recursive crawling and lists of URLs and automatically manages concurrency for maximum performance. This is Apify's basic tool for web crawling and scraping.",
+  "usersTotal": 60189,
+  "usersMonthly": 3792
+},
+{
+  "url": "https://apify.com/compass/crawler-google-places",
+  "title": "Google Maps Scraper",
+  "description": "Extract data from hundreds of Google Maps locations and businesses. Get Google Maps data including reviews, images, contact info, opening hours, location, popular times, prices & more. Export scraped data, run the scraper via API, schedule and monitor runs, or integrate with other tools.",
+  "usersTotal": 59533,
+  "usersMonthly": 4456
+}]

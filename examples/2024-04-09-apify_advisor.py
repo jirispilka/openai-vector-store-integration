@@ -7,9 +7,9 @@ https://platform.openai.com/docs/assistants/overview/agents
 - Query using thread (session)
 """
 
-import os
 from pathlib import Path
 
+from dotenv import load_dotenv
 from openai import OpenAI
 
 INSTRUCTIONS = """
@@ -25,8 +25,7 @@ Always be polite and proactive in suggesting next steps, providing valid links w
 Keep responses concise and focused.
 """
 
-os.environ["OPENAI_API_KEY"] = ""
-
+load_dotenv()
 client = OpenAI()
 
 PATH = Path(__file__).parent.parent / "data"
@@ -53,7 +52,6 @@ assistant = client.beta.assistants.create(
     file_ids=file_ids,
     tools=[{"type": "retrieval"}],
 )
-# asst_YVTodIpCHOyBR22xQjNxxCFk
 print(assistant)
 
 

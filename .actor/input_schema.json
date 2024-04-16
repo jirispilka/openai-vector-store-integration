@@ -10,6 +10,13 @@
             "description": "OpenAI Assistant ID.",
             "editor": "textfield"
         },
+        "openai_api_key": {
+            "title": "OpenAI API KEY",
+            "description": "OpenAI API KEY",
+            "type": "string",
+            "editor": "textfield",
+            "isSecret": true
+        },
         "dataset_id": {
             "title": "Dataset ID",
             "type": "string",
@@ -35,13 +42,6 @@
             "type": "string",
             "description": "Specifying a file prefix simplifies the management of Assistant files updates by avoiding the need to track all file IDs.",
             "editor": "textfield"
-        },
-        "openai_api_key": {
-            "title": "OpenAI API KEY",
-            "description": "OpenAI API KEY",
-            "type": "string",
-            "editor": "textfield",
-            "isSecret": true
         }
     },
     "required": [
