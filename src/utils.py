@@ -7,6 +7,28 @@ OPENAI_MAX_FILES = 20
 OPENAI_MAX_TOKENS_PER_FILE = 2_000_000
 
 
+def get_nested_value(data: dict, keys: str):
+    """
+    Extract nested value from dict.
+
+    Example:
+      >>> get_nested_value({"a": "v1", "c1": {"c2": "v2"}}, "c1.c2")
+      'v2'
+    """
+
+    keys = keys.split(".")
+    result = data
+
+    for key in keys:
+        if key in result:
+            result = result[key]
+        else:
+            # If any of the keys are not found, return None
+            return None
+
+    return result
+
+
 async def split_data_if_required(data: list, encoding: tiktoken.core.Encoding) -> list | None:
     """Split data if number of tokens is larger than OpenAI's limits."""
 

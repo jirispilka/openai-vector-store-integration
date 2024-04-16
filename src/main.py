@@ -1,4 +1,3 @@
-
 import json
 
 import tiktoken
@@ -7,7 +6,7 @@ from apify_client import ApifyClientAsync
 from openai import AsyncOpenAI
 
 from .model import OpenaiAssistantFilesIntegrationInputs
-from .utils import split_data_if_required
+from .utils import get_nested_value, split_data_if_required
 
 
 async def main() -> None:
@@ -30,13 +29,21 @@ async def main() -> None:
             msg = """No Dataset ID provided. It should be provided either in payload or in actor_input."""
             await Actor.fail(status_message=msg)
 
-        dataset = await aclient_apify.dataset(dataset_id).list_items(clean=True, fields=aid.fields)
+        dataset = await aclient_apify.dataset(dataset_id).list_items(clean=True)
         data: list = dataset.items
+
+        if aid.fields:
+            Actor.log.debug("Selecting the following fields %s", aid.fields)
+            data = [{key: get_nested_value(d, key) for key in aid.fields} for d in data]
+            data = [d for d in data if d]
+
         data = await split_data_if_required(data, encoding)
 
-        # this is not optimal, data are first deleted but then created. It should be vice versa
-        # but we are hitting the OpenAI Assistant limits.
+        # The files are first deleted to circumvent OpenAI Assistant files limit.
+        # It can happen that for a short period of time the Assistant is without any file attached.
         await delete_files(client, aid, assistant)
+
+        store = await Actor.open_key_value_store()
 
         # Create assistant files
         for i, d in enumerate(data):
@@ -45,13 +52,16 @@ async def main() -> None:
                     f"{aid.file_prefix}_{aid.dataset_id}_{i}.json" if aid.file_prefix else f"{aid.dataset_id}_{i}.json"
                 )
                 file = await client.files.create(file=(filename, json.dumps(d).encode("utf-8")), purpose="assistants")
-                await client.beta.assistants.files.create(aid.assistant_id, file_id=file.id)
                 Actor.log.debug("Created file %s, file_id: %s", file.filename, file.id)
+                await client.beta.assistants.files.create(aid.assistant_id, file_id=file.id)
+                Actor.log.debug("Attached file %s, file_id: %s to the assistant", file.filename, file.id)
+                await store.set_value(filename, json.dumps(d), content_type="application/json")
+                Actor.log.debug("Stored the file in Actor's key value store file: %s", file.filename)
             except Exception as e:
                 Actor.log.exception(e)
 
 
-async def delete_files(client, aid: OpenaiAssistantFilesIntegrationInputs, assistant):
+async def delete_files(client, aid: OpenaiAssistantFilesIntegrationInputs, assistant) -> None:
 
     # only delete files that ara attached to the assistant_id
     files_to_delete = set(aid.file_ids_to_delete) if aid.file_ids_to_delete else set()
@@ -71,15 +81,20 @@ async def delete_files(client, aid: OpenaiAssistantFilesIntegrationInputs, assis
                 Actor.log.exception(e)
 
 
-async def get_assistant_files_by_prefix(client: AsyncOpenAI, aid: OpenaiAssistantFilesIntegrationInputs):
-    """ List Assistant files and return file_ids that starts with prefix."""
+async def get_assistant_files_by_prefix(client: AsyncOpenAI, aid: OpenaiAssistantFilesIntegrationInputs) -> set | None:
+    """List Assistant files and return file_ids that starts with prefix."""
+
+    if not aid.file_prefix:
+        return
 
     files = set()
-    if aid.file_prefix:
-        for key, f in await client.beta.assistants.files.list(assistant_id=aid.assistant_id):
-            if key == "data":
-                for assistant_file in f:
+    for key, f in await client.beta.assistants.files.list(assistant_id=aid.assistant_id):
+        if key == "data":
+            for assistant_file in f:
+                try:
                     file_ = await client.files.retrieve(assistant_file.id)
                     if file_.filename.startswith(aid.file_prefix):
                         files.add(assistant_file.id)
+                except Exception as e:
+                    Actor.log.warning(e)
     return files
