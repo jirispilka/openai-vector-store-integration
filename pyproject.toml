@@ -24,6 +24,7 @@ pandas = "^2.2.2"
 
 [tool.ruff]
 line-length = 120
+exclude = ["src/input_model.py"]
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -61,7 +62,7 @@ ignore = [
 ]
 
 [tool.ruff.format]
-quote-style = "single"
+quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.lint.per-file-ignores]
@@ -86,13 +87,13 @@ indent-style = "space"
 
 [tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"
-inline-quotes = "single"
+inline-quotes = "double"
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
-[tool.ruff.lint.isort]
-known-first-party = ["apify"]
+#[tool.ruff.lint.isort]
+#known-first-party = ["apify"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"

@@ -23,5 +23,6 @@ format:
 	poetry run ruff format $(DIRS_WITH_CODE)
 
 pydantic-model:
-	datamodel-codegen --input .actor/input_schema.json --output $(DIRS_WITH_CODE)/model.py  --input-file-type jsonschema
+	datamodel-codegen --input .actor/input_schema.json --output $(DIRS_WITH_CODE)/input_model.py  --input-file-type jsonschema
+	sed -i '1s;^;# mypy: ignore-errors\n;' $(DIRS_WITH_CODE)/input_model.py
 
