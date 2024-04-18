@@ -17,7 +17,7 @@ Always be polite and proactive in suggesting next steps, providing valid links w
 Keep responses concise and focused.
 """
 
-PATH = Path(__file__).parent.parent / "data"
+PATH = Path().resolve() / "data"
 FILE_PUBLIC_ACTORS = PATH / "dataset_public-actors-lister-apify-advisor_2024-04-09_19-23-55-381.json"
 FILE_APIFY_COM = PATH / "dataset_apify-advisor-gpt_2024-04-10_14-34-47-759.json"
 

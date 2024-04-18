@@ -28,8 +28,8 @@ Keep responses concise and focused.
 load_dotenv()
 client = OpenAI()
 
-PATH = Path(__file__).parent.parent / "data"
-FILE_PUBLIC_ACTORS = PATH / "dataset_public-actors-lister-apify-advisor_2024-04-09_19-23-55-381.json"
+PATH = Path().resolve() / "data"
+FILE_PUBLIC_ACTORS = PATH / "dataset_public-actors-lister-apify-advisor_2024-04-12-04-URL.json"
 FILE_APIFY_COM = PATH / "dataset_apify-advisor-gpt_2024-04-10_14-34-47-759.json"
 
 client.files.create(file=open(FILE_PUBLIC_ACTORS, "rb"), purpose="assistants")
@@ -57,6 +57,9 @@ print(assistant)
 
 for f in client.beta.assistants.files.list(assistant_id=assistant.id):
     print(f.id)
+
+# for f in file_ids:
+#     client.beta.assistants.files.create(assistant_id=assistant.id, file_id=f)
 
 # delete files
 # for f in client.files.list():
