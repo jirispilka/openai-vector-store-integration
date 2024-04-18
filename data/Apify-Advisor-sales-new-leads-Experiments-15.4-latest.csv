@@ -1,0 +1,6 @@
+ID,Message,Answer
+13,I want to scrape text from various Twitter accounts.,"'''
+- To scrape text from various Twitter accounts, you can use the [Twitter Search Scraper](https://apify.com/epctex/twitter-search-scraper) available on Apify. This Actor allows for scraping tweets based on keywords or hashtags and extracts detailed information such as tweets, replies, favorites, retweets, and conversation threads without any limits.
+- You can easily try it out as it’s free of charge and provides a comprehensive solution for Twitter data extraction.
+- If you need to scrape specific user accounts or require different functionalities, please explore other options in the [Apify Store](https://apify.com/store) or consider developing a custom solution using the Apify platform.
+'''"

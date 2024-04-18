@@ -1,0 +1,53 @@
+{
+    "title": "OpenAI Assistant Files Integration Inputs",
+    "type": "object",
+    "description": "Use Apify's dataset and update OpenAI Assistant Files ",
+    "schemaVersion": 1,
+    "properties": {
+        "assistant_id": {
+            "title": "OpenAI Assistant ID",
+            "type": "string",
+            "description": "OpenAI Assistant ID",
+            "editor": "textfield"
+        },
+        "openai_api_key": {
+            "title": "OpenAI API KEY",
+            "description": "OpenAI API KEY",
+            "type": "string",
+            "editor": "textfield",
+            "isSecret": true
+        },
+        "dataset_id": {
+            "title": "Dataset ID",
+            "type": "string",
+            "description": "Dataset ID (when running standalone without integration)",
+            "editor": "textfield"
+        },
+        "fields": {
+            "title": "A list of fields which should be selected from the items",
+            "type": "array",
+            "description": "A list of fields which should be selected from the items, only these fields will remain in the resulting record objects.\n\n For example, when using the website content crawler, you might select fields such as `text` and `url`, and `metadata.title` among others, to be included in the Assistant file.",
+            "default": [ "url", "text"],
+            "prefill": ["url", "text", "metadata.title"],
+            "editor": "json"
+        },
+        "file_ids_to_delete": {
+            "title": "Array of Assistant file ids to deleted",
+            "type": "array",
+            "description": "Delete specified file ids. This can be useful to delete files that are no longer needed.",
+            "editor": "json"
+        },
+        "file_prefix": {
+            "title": "Delete/Create Assistant files with a prefix",
+            "type": "string",
+            "description": "Using a file prefix streamlines the management of Assistant file updates by eliminating the need to track each file's ID. For instance, if you set the file_prefix to 'apify-advisor', the Actor will initially locate all files associated with the Assistant that have this prefix. Subsequently, it will delete these files and create new ones, also prefixed accordingly.",
+            "editor": "textfield",
+            "minLength": 5
+        }
+    },
+    "required": [
+        "assistant_id",
+        "fields",
+        "openai_api_key"
+    ]
+}
