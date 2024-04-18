@@ -28,3 +28,5 @@ if run.status == "completed":
 else:
     # there needs to be some fallback message for terminal states: expired, failed, cancelled
     print(run.status)
+
+client.beta.threads.delete(thread_id=thread.id)
