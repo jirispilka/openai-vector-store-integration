@@ -89,7 +89,7 @@ async def create_files(
             filename = f"{prefix}_{i}.json"
             file = await client.files.create(file=(filename, json.dumps(d).encode("utf-8")), purpose="assistants")
             Actor.log.debug("Created OpenAI file: %s, id: %s", file.filename, file.id)
-            await Actor.push_data({"filename": filename, "file_id": file.id, "status": file.status})
+            await Actor.push_data({"filename": filename, "file_id": file.id, "status": "created"})
             files_created.append(file)
     except Exception as e:
         Actor.log.exception(e)

@@ -31,11 +31,11 @@
                                 "format": "text"
                             },
                             "file_id": {
-                                "label": "file_id",
+                                "label": "OpenAI file id",
                                 "format": "text"
                             },
                             "status": {
-                                "label": "file status",
+                                "label": "File status",
                                 "format": "text"
                             }
                         }
