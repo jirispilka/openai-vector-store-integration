@@ -23,7 +23,6 @@
             "description": "Assistant ID (required only when a file exceeds OpenAI limits and needs to be split)",
             "editor": "textfield"
         },
-
         "fields": {
             "title": "A list of fields which should be selected from the items",
             "type": "array",

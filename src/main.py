@@ -37,6 +37,8 @@ async def main() -> None:
 
         if encoding := assistant and tiktoken.encoding_for_model(assistant.model) or None:
             data = await split_data_if_required(data, encoding)
+        else:
+            data = [data]
 
         file_ids_to_delete = await get_file_ids_to_delete(
             client, aid.file_ids_to_delete, aid.file_prefix, aid.vector_store_id

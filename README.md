@@ -39,13 +39,13 @@ To utilize this integration, ensure you have:
 
 Refer to [input schema](.actor/input_schema.json) for details.
 
-- `openai_api_key` - OpenAI API key
 - `vector_store_id` - OpenAI Vector Store ID
+- `openai_api_key` - OpenAI API key
+- `assistant_id`: OpenAI Assistant ID (only required when files exceed OpenAI limits, necessitating file splitting).
 - `fields` - Array of fields you want to save, e.g., `["url", "text", "metadata.title"]`.
 - `file_ids_to_delete` - Delete specified file IDs from vector store as needed.
 - `file_prefix` - Delete and create files using a file_prefix, streamlining vector store updates.
 - `dataset_id`: [Debug] Dataset ID (when running Actor as standalone without integration).
-- `assistant_id`: OpenAI Assistant ID (only required when files exceed OpenAI limits, necessitating file splitting).
 
 ## Outputs
 
