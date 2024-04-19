@@ -3,8 +3,8 @@ import json
 import tiktoken
 from apify import Actor
 
-OPENAI_MAX_FILES = 20
-OPENAI_MAX_TOKENS_PER_FILE = 2_000_000
+OPENAI_MAX_FILES = 10_000
+OPENAI_MAX_TOKENS_PER_FILE = 5_000_000
 
 
 def get_nested_value(data: dict, keys: str) -> dict:
