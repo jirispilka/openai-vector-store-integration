@@ -1,5 +1,5 @@
 # Change Log
 
-## 0.1 (2023-07-19)
+## 0.1 (2024-04-19)
 
-- Initial release of BeautifulSoup Scraper.
+- Initial release of OpenAI vector store integration
