@@ -62,16 +62,6 @@ print(batch)
 for a in client.beta.assistants.list():
     print(a.id, a.name, a.created_at)
 
-# CREATE assistant
-assistant = client.beta.assistants.create(
-    instructions=INSTRUCTIONS,
-    name="Apify Advisor",
-    model="gpt-3.5-turbo",
-    file_ids=file_ids,
-    tools=[{"type": "retrieval"}],
-)
-print(assistant)
-# ASSISTANT_ID = assistant.id
 ASSISTANT_ID = "asst_JwgoDaED4YtBXeS9oZ6EeSwS"
 
 assistant = client.beta.assistants.retrieve(assistant_id=ASSISTANT_ID)

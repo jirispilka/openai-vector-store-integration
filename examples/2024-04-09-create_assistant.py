@@ -93,7 +93,9 @@ def create_assistant(name: str, model: str, instructions: str, file_ids: list[st
 def query_assistant(assistant_id: str, query: str):
     try:
         run = client.beta.threads.create_and_run_poll(
-            assistant_id=assistant_id, thread={"messages": [{"role": "user", "content": query}]}
+            assistant_id=assistant_id,
+            thread={"messages": [{"role": "user", "content": query}]},
+            tool_choice={"type": "file_search"},
         )
         message_final = list(client.beta.threads.messages.list(thread_id=run.thread_id))[0]
         response = "\n".join([_m.text.value for _m in message_final.content])
@@ -111,7 +113,7 @@ if __name__ == "__main__":
 
     df = pd.read_csv(str(PATH / "Apify-Advisor-Experiments-15.4-latest.csv"))
 
-    _id = os.getenv("ASSISTANT_ID")
+    _id = os.getenv("ASSISTANT_ID") or ""
     df["Answer"] = ""
     df["latency [sec]"] = 0
     for index, row in df.iterrows():
@@ -124,5 +126,5 @@ if __name__ == "__main__":
         df.at[index, "latency [sec]"] = et - st
         print("Response", r)
 
-    file_out = str(PATH / "Apify-Advisor--Experiments-15.4-latest-out.csv")
+    file_out = str(PATH / "Apify-Advisor--Experiments-15.4-latest-out-2.csv")
     df.to_csv(file_out, index=False)
