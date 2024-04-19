@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING
 import tiktoken
 from apify import Actor
 from apify_client import ApifyClientAsync
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, NotFoundError
 
-from .input_model import OpenaiAssistantFilesIntegrationInputs
+from .input_model import OpenaiVectorStoreIntegration as Inputs
 from .utils import get_nested_value, split_data_if_required
 
 if TYPE_CHECKING:
@@ -20,21 +20,12 @@ async def main() -> None:
     async with Actor:
 
         payload = await Actor.get_input()
-
-        aid = OpenaiAssistantFilesIntegrationInputs(**payload)
+        aid = Inputs(**payload)
 
         client = AsyncOpenAI(api_key=aid.openai_api_key)
         aclient_apify = ApifyClientAsync()
 
-        if not (assistant := await client.beta.assistants.retrieve(aid.assistant_id)):
-            await Actor.fail(status_message=f"Assistant with ID: {aid.assistant_id} was not found at the OpenAI")
-
-        encoding = tiktoken.encoding_for_model(assistant.model)
-
-        resource = payload.get("payload", {}).get("resource", {})
-        if not (dataset_id := resource.get("defaultDatasetId") or aid.dataset_id or ""):
-            msg = """No Dataset ID provided. It should be provided either in payload or in actor_input."""
-            await Actor.fail(status_message=msg)
+        assistant, dataset_id = await check_inputs(client, aid, payload)
 
         dataset = await aclient_apify.dataset(dataset_id).list_items(clean=True)
         data: list = dataset.items
@@ -44,105 +35,162 @@ async def main() -> None:
             data = [{key: get_nested_value(d, key) for key in aid.fields} for d in data]
             data = [d for d in data if d]
 
-        data = await split_data_if_required(data, encoding)
-        file_ids_to_delete = await get_file_ids_to_delete(client, aid, assistant)
+        if encoding := assistant and tiktoken.encoding_for_model(assistant.model) or None:
+            data = await split_data_if_required(data, encoding)
 
-        # 1 - Create files
-        store = await Actor.open_key_value_store()
+        file_ids_to_delete = await get_file_ids_to_delete(
+            client, aid.file_ids_to_delete, aid.file_prefix, aid.vector_store_id
+        )
 
-        files_created = []
-        try:
-            for i, d in enumerate(data):
-                prefix = f"{aid.file_prefix}_{aid.dataset_id}" if aid.file_prefix else f"{aid.dataset_id}"
-                filename = f"{prefix}_{i}.json"
-                file = await client.files.create(file=(filename, json.dumps(d).encode("utf-8")), purpose="assistants")
-                Actor.log.debug("Created file %s, file_id: %s", file.filename, file.id)
-                await store.set_value(filename, json.dumps(d), content_type="application/json")
-                Actor.log.debug("Stored the file in Actor's key value store file: %s", file.filename)
-                files_created.append(file)
-        except Exception as e:
-            Actor.log.exception(e)
+        # 1 - Create files (also store in Apify's KV store if enabled)
+        files_created = await create_files(client, data, aid.dataset_id, aid.file_prefix)
+        if aid.save_in_apify_key_value_store:
+            await save_in_apify_kv_store(files_created, data)
 
-        # 2 - detach existing files from the assistant
-        await detach_assistant_files(client, aid.assistant_id, file_ids_to_delete)
+        # 2 - remove files from vector store
+        await delete_files_from_vector_store(client, aid.vector_store_id, file_ids_to_delete)
 
-        # 3 - attach new files
-        await attach_assistant_files(client, aid.assistant_id, files_created)
+        #  3 - add to vector store in batch and poll for results
+        await create_files_vector_store_and_poll(client, aid.vector_store_id, files_created)
 
-        # delete files
+        # 4 - delete all files
         await delete_files(client, file_ids_to_delete)
 
 
-async def attach_assistant_files(client: AsyncOpenAI, assistant_id: str, files_created: list[FileObject]) -> None:
+async def check_inputs(client: AsyncOpenAI, aid: Inputs, payload: dict) -> tuple[Assistant | None, str]:
+    """Check that provided input exists at OpenAI or at Apify."""
+
+    if not (await client.beta.vector_stores.retrieve(aid.vector_store_id)):
+        await Actor.fail(status_message=f"Vector Store with ID: {aid.vector_store_id} was not found at the OpenAI")
+
+    assistant = None
+    if aid.assistant_id and not (assistant := await client.beta.assistants.retrieve(aid.assistant_id)):
+        await Actor.fail(status_message=f"Assistant with ID: {aid.assistant_id} was not found at the OpenAI")
+
+    resource = payload.get("payload", {}).get("resource", {})
+    if not (dataset_id := resource.get("defaultDatasetId") or aid.dataset_id or ""):
+        msg = """No Dataset ID provided. It should be provided either in payload or in actor_input."""
+        await Actor.fail(status_message=msg)
+
+    return assistant, dataset_id
+
+
+async def create_files(
+    client: AsyncOpenAI, data: list[dict], dataset_id: str | None, file_prefix: str | None
+) -> list[FileObject]:
+    """Create files in OpenAI."""
+
+    files_created = []
     try:
-        for file in files_created:
-            await client.beta.assistants.files.create(assistant_id, file_id=file.id)
-            Actor.log.debug("Attached file %s, file_id: %s to the assistant", file.filename, file.id)
+        for i, d in enumerate(data):
+            prefix = f"{file_prefix}_{dataset_id}" if file_prefix else f"{dataset_id}"
+            filename = f"{prefix}_{i}.json"
+            file = await client.files.create(file=(filename, json.dumps(d).encode("utf-8")), purpose="assistants")
+            Actor.log.debug("Created OpenAI file: %s, id: %s", file.filename, file.id)
+            files_created.append(file)
+    except Exception as e:
+        Actor.log.exception(e)
+
+    return files_created
+
+
+async def create_files_vector_store_and_poll(client: AsyncOpenAI, vs_id: str, files_created: list) -> None:
+    try:
+        v = await client.beta.vector_stores.file_batches.create_and_poll(
+            vector_store_id=vs_id, file_ids=[f.id for f in files_created]
+        )
+        Actor.log.debug("Created files in vector store: %s", v)
     except Exception as e:
         Actor.log.exception(e)
 
 
-async def get_file_ids_to_delete(
-    client: AsyncOpenAI, aid: OpenaiAssistantFilesIntegrationInputs, assistant: Assistant
-) -> set:
-    """Only delete files that are associated with the assistant_id."""
-
-    files_to_delete = set(aid.file_ids_to_delete) if aid.file_ids_to_delete else set()
-    files_to_delete = files_to_delete.intersection(set(assistant.file_ids))
-
-    # get files with prefix associated with the assistant_id
-    return files_to_delete.union(await get_assistant_files_by_prefix(client, aid))
-
-
-async def detach_assistant_files(client: AsyncOpenAI, assistant_id: str, files_to_delete: set) -> None:
-    """Detach files from the assistant.
-
-    Note that file is not actually deleted. Only the association is removed.
-
-    https://platform.openai.com/docs/api-reference/assistants/deleteAssistantFile
-    """
-
-    try:
-        for file_id in files_to_delete:
-            await client.beta.assistants.files.delete(file_id, assistant_id=assistant_id)
-            Actor.log.debug("Detached file_id: %s", file_id)
-    except Exception as e:
-        Actor.log.exception(e)
-
-
-async def delete_files(client: AsyncOpenAI, files_to_delete: set) -> None:
+async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> None:
     """
     Delete OpenAI files.
 
     https://platform.openai.com/docs/api-reference/files/delete
     """
+    files_to_delete = files_to_delete or []
 
-    Actor.log.debug("Files to delete: %s", files_to_delete)
+    Actor.log.debug("Files ids to delete: %s", files_to_delete)
     try:
-        for file_id in files_to_delete:
-            await client.files.delete(file_id)
-            Actor.log.debug("Deleted file_id: %s", file_id)
+        for _id in files_to_delete:
+            await client.files.delete(_id)
+            Actor.log.debug("Deleted OpenAI File with id: %s", _id)
     except Exception as e:
         Actor.log.exception(e)
 
 
-async def get_assistant_files_by_prefix(client: AsyncOpenAI, aid: OpenaiAssistantFilesIntegrationInputs) -> set:
-    """List Assistant files and return file_ids that starts with prefix.
+async def delete_files_from_vector_store(client: AsyncOpenAI, vs_id: str, file_ids_to_delete: list[str]) -> None:
+    """Remove files from vector store. The files are not actually deleted, only removed."""
 
-    https://platform.openai.com/docs/api-reference/assistants/listAssistantFiles
+    file_ids_to_delete = file_ids_to_delete or []
+    try:
+        for _id in file_ids_to_delete:
+            file_ = await client.beta.vector_stores.files.delete(_id, vector_store_id=vs_id)
+            Actor.log.debug("Removed file from vector store: %s", file_)
+    except Exception as e:
+        Actor.log.exception(e)
+
+
+async def get_file_ids_to_delete(
+    client: AsyncOpenAI, file_ids: list | None, file_prefix: str | None, vs_id: str
+) -> list[str]:
+    """Find files to be deleted using file_ids and/or by file prefix.
+
+    Only delete files that are associated with the vector store.
     """
 
-    if not aid.file_prefix:
-        return set()
+    file_ids = file_ids or []
+    file_prefix = file_prefix or ""
 
-    files = set()
-    for key, f in await client.beta.assistants.files.list(assistant_id=aid.assistant_id):
-        if key == "data":
+    if not file_ids and not file_prefix:
+        return []
+
+    vs_files = await client.beta.vector_stores.files.list(vector_store_id=vs_id)
+    Actor.log.debug("Files associated with the vector store: %s", [f.id for f in vs_files.data])
+
+    files_to_delete = []
+    for f in vs_files.data:
+        if f.id in file_ids:
+            files_to_delete.append(f.id)
+        elif file_prefix:
             try:
-                for assistant_file in f:
-                    file_ = await client.files.retrieve(assistant_file.id)
-                    if file_.filename.startswith(aid.file_prefix):
-                        files.add(assistant_file.id)
-            except Exception as e:
-                Actor.log.warning(e)
-    return files
+                file_ = await client.files.retrieve(f.id)
+                if file_.filename.startswith(file_prefix):
+                    files_to_delete.append(f.id)
+            except NotFoundError:
+                Actor.log.warning(
+                    "File %s associated with vector store: %s was not found in the OpenAI Files. This "
+                    "typically means that the file was deleted but is still associated with vector store."
+                    "You need to solve this issue manually if desired.",
+                    f.id,
+                    vs_id,
+                )
+
+    if set(file_ids) - set(files_to_delete):
+        Actor.log.warning(
+            "The following file ids were provided in the input but not found in the vector store: %s, If you want to"
+            "really delete them, you will have to do it manually.",
+            set(file_ids) - set(files_to_delete),
+        )
+
+    return files_to_delete
+
+
+async def save_in_apify_kv_store(files_created: list[FileObject], data: list[dict]) -> None:
+    """Save files in Apify's KV Store for the debugging purposes."""
+
+    if len(files_created) != len(data):
+        Actor.log.warning(
+            "Number of files created does not match the number of data. Saving to Apify's KV store skipped"
+        )
+        return
+
+    try:
+        store = await Actor.open_key_value_store()
+        for file, d in zip(files_created, data):
+            await store.set_value(file.filename, json.dumps(d), content_type="application/json")
+            Actor.log.debug("Stored the file in the Actor's key value store: %s", file.filename)
+    except Exception as e:
+        Actor.log.exception(e)
