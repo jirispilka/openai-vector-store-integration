@@ -89,6 +89,7 @@ async def create_files(
             filename = f"{prefix}_{i}.json"
             file = await client.files.create(file=(filename, json.dumps(d).encode("utf-8")), purpose="assistants")
             Actor.log.debug("Created OpenAI file: %s, id: %s", file.filename, file.id)
+            await Actor.push_data({"filename": filename, "file_id": file.id, "status": file.status})
             files_created.append(file)
     except Exception as e:
         Actor.log.exception(e)
@@ -117,8 +118,9 @@ async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> None:
     Actor.log.debug("Files ids to delete: %s", files_to_delete)
     try:
         for _id in files_to_delete:
-            await client.files.delete(_id)
+            file_ = await client.files.delete(_id)
             Actor.log.debug("Deleted OpenAI File with id: %s", _id)
+            await Actor.push_data({"filename": "", "file_id": file_.id, "status": "deleted"})
     except Exception as e:
         Actor.log.exception(e)
 
@@ -172,7 +174,7 @@ async def get_file_ids_to_delete(
 
     if set(file_ids) - set(files_to_delete):
         Actor.log.warning(
-            "The following file ids were provided in the input but not found in the vector store: %s, If you want to"
+            "The following file ids were provided in the input but not found in the vector store: %s, If you want to "
             "really delete them, you will have to do it manually.",
             set(file_ids) - set(files_to_delete),
         )

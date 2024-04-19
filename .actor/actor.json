@@ -1,39 +1,47 @@
 {
-  "actorSpecification": 1,
-  "name": "openai-assistant-files-integration",
-  "title": "OpenAI Assistant Files Integration",
-  "description": "The Apify OpenAI Assistant Actor allows to dynamically update the AI Assistant files.",
-  "version": "0.1",
-  "meta": {
-    "templateId": "python-beautifulsoup"
-  },
-  "input": "./input_schema.json",
-  "dockerfile": "./Dockerfile",
-  "storages": {
-    "dataset": {
-      "actorSpecification": 1,
-      "title": "URLs and their titles",
-      "views": {
-        "titles": {
-          "title": "URLs and their titles",
-          "transformation": {
-            "fields": ["url", "title"]
-          },
-          "display": {
-            "component": "table",
-            "properties": {
-              "url": {
-                "label": "URL",
-                "format": "text"
-              },
-              "title": {
-                "label": "Title",
-                "format": "text"
-              }
+    "actorSpecification": 1,
+    "name": "openai-assistant-files-integration",
+    "title": "OpenAI Assistant Files Integration",
+    "description": "The Apify OpenAI Assistant Actor allows to dynamically update the AI Assistant files.",
+    "version": "0.1",
+    "meta": {
+        "templateId": "python-beautifulsoup"
+    },
+    "input": "./input_schema.json",
+    "dockerfile": "./Dockerfile",
+    "storages": {
+        "dataset": {
+            "actorSpecification": 1,
+            "title": "OpenAI files created/deleted",
+            "views": {
+                "titles": {
+                    "title": "OpenAI files created/deleted",
+                    "transformation": {
+                        "fields": [
+                            "filename",
+                            "file_id",
+                            "status"
+                        ]
+                    },
+                    "display": {
+                        "component": "table",
+                        "properties": {
+                            "filename": {
+                                "label": "filename",
+                                "format": "text"
+                            },
+                            "file_id": {
+                                "label": "file_id",
+                                "format": "text"
+                            },
+                            "status": {
+                                "label": "file status",
+                                "format": "text"
+                            }
+                        }
+                    }
+                }
             }
-          }
         }
-      }
     }
-  }
 }
