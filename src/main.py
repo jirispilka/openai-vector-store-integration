@@ -74,6 +74,7 @@ async def check_inputs(client: AsyncOpenAI, aid: Inputs, payload: dict) -> tuple
         msg = """No Dataset ID provided. It should be provided either in payload or in actor_input."""
         await Actor.fail(status_message=msg)
 
+    aid.dataset_id = dataset_id
     return assistant, dataset_id
 
 
