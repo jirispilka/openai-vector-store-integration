@@ -20,7 +20,7 @@
         "assistant_id": {
             "title": "Assistant ID",
             "type": "string",
-            "description": "Assistant ID (required only when a file exceeds OpenAI limits and needs to be split)",
+            "description": "The ID of an OpenAI Assistant. This parameter is required only when a file exceeds the OpenAI size limit of 5,000,000 tokens (as of 2024-04-23).\n\n When necessary, the model associated with the assistant is utilized to count tokens and split the large file into smaller, manageable segments.",
             "editor": "textfield"
         },
         "fields": {
