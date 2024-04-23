@@ -41,7 +41,9 @@ Refer to [input schema](.actor/input_schema.json) for details.
 
 - `vector_store_id` - OpenAI Vector Store ID
 - `openai_api_key` - OpenAI API key
-- `assistant_id`: OpenAI Assistant ID (only required when files exceed OpenAI limits, necessitating file splitting).
+- `assistant_id`: The ID of an OpenAI Assistant. This parameter is required only when a file exceeds the OpenAI
+   size limit of 5,000,000 tokens (as of 2024-04-23). When necessary, the model associated with the assistant is
+   utilized to count tokens and split the large file into smaller, manageable segments.
 - `fields` - Array of fields you want to save, e.g., `["url", "text", "metadata.title"]`.
 - `file_ids_to_delete` - Delete specified file IDs from vector store as needed.
 - `file_prefix` - Delete and create files using a file_prefix, streamlining vector store updates.
