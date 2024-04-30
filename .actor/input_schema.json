@@ -32,7 +32,7 @@
             "editor": "json"
         },
         "file_ids_to_delete": {
-            "title": "Array of vector store file ids to deleted",
+            "title": "Array of vector store file ids to delete",
             "type": "array",
             "description": "Delete specified file ids associated with vector store. This can be useful when one needs to delete files that are no longer needed.",
             "editor": "json"
@@ -40,7 +40,7 @@
         "file_prefix": {
             "title": "Delete/Create vector store files with a prefix",
             "type": "string",
-            "description": "Using a file prefix streamlines the management of vector store file updates by eliminating the need to track each file's ID. For instance, if you set the file_prefix to 'apify-advisor', the Actor will initially locate all files in vector store with this prefix. Subsequently, it will delete these files and create new ones, also prefixed accordingly.",
+            "description": "Using a file prefix streamlines the management of vector store file updates by eliminating the need to track each file's ID. For instance, if you set the file_prefix to 'apify-advisor', the Actor will initially locate all files in the vector store with this prefix. Subsequently, it will delete these files and create new ones, also prefixed accordingly.",
             "editor": "textfield",
             "minLength": 5
         },

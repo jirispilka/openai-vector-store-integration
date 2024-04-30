@@ -29,8 +29,8 @@ load_dotenv()
 client = OpenAI()
 
 PATH = Path().resolve() / "data"
-FILE_PUBLIC_ACTORS = PATH / "dataset_public-actors-lister-apify-advisor_2024-04-12-04-URL.json"
-FILE_APIFY_COM = PATH / "dataset_apify-advisor-gpt_2024-04-10_14-34-47-759.json"
+FILE_PUBLIC_ACTORS = PATH / "dataset_apify-public-actors.json"
+FILE_APIFY_COM = PATH / "dataset_apify-web.json"
 
 client.files.create(file=open(FILE_PUBLIC_ACTORS, "rb"), purpose="assistants")
 client.files.create(file=open(FILE_APIFY_COM, "rb"), purpose="assistants")

@@ -29,9 +29,9 @@ Keep responses concise and focused.
 load_dotenv()
 client = OpenAI()
 
-PATH = Path("/home/jirka/dokumenty/apify/apify-adviser/")
-FILE_PUBLIC_ACTORS = PATH / "dataset_public-actors-lister-apify-advisor_2024-04-12-04-URL.json"
-FILE_APIFY_COM = PATH / "dataset_apify-advisor-gpt_2024-04-10_14-34-47-759.json"
+PATH = Path().resolve() / "data"
+FILE_PUBLIC_ACTORS = PATH / "dataset_apify-public-actors.json"
+FILE_APIFY_COM = PATH / "dataset_apify-web.json"
 
 VECTOR_STORE_ID = "vs_l0VplHkJoVATtjA7EDLtPvL0"
 
