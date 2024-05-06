@@ -15,6 +15,8 @@ python = "^3.12"
 tiktoken = "^0.6.0"
 python-dotenv = "^1.0.1"
 mypy = "^1.9.0"
+pytest = "^8.2.0"
+pytest-asyncio = "^0.23.6"
 
 [tool.poetry.group.dev.dependencies]
 datamodel-code-generator = "^0.25.5"
