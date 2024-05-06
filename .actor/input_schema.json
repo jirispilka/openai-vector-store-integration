@@ -44,14 +44,26 @@
             "editor": "textfield",
             "minLength": 5
         },
+        "save_files": {
+            "title": "Save files from apify key-value store to OpenAI File Store",
+            "type": "boolean",
+            "description": "Enables saving files from Apify's key-value store to OpenAI's file store. Useful when utilizing Apify’s website content crawler with the 'saveFiles' option, allowing the found files to be directly store and used in the assistant.",
+            "default": true
+        },
         "dataset_id": {
             "title": "Dataset ID",
             "type": "string",
             "description": "Dataset ID (when running standalone without integration, typically when debugging or in ad-hoc settings)",
             "editor": "textfield"
         },
+        "key_value_store_id": {
+            "title": "Key-value store ID",
+            "type": "string",
+            "description": "Key-value store ID (when running standalone without integration, typically when debugging or in ad-hoc settings)",
+            "editor": "textfield"
+        },
         "save_in_apify_key_value_store": {
-            "title": "Save files also in Apify key-value store",
+            "title": "Save files (pdf, ) also in Apify key-value store",
             "type": "boolean",
             "description": "Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)",
             "default": false

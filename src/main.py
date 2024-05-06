@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from io import BytesIO
 from typing import TYPE_CHECKING
 
 import tiktoken
@@ -8,6 +9,7 @@ from apify import Actor
 from apify_client import ApifyClientAsync
 from openai import AsyncOpenAI, NotFoundError
 
+from .constants import OPENAI_SUPPORTED_FILES
 from .input_model import OpenaiVectorStoreIntegration as Inputs
 from .utils import get_nested_value, split_data_if_required
 
@@ -25,41 +27,34 @@ async def main() -> None:
         client = AsyncOpenAI(api_key=aid.openai_api_key)
         aclient_apify = ApifyClientAsync()
 
-        assistant, dataset_id = await check_inputs(client, aid, payload)
-
-        dataset = await aclient_apify.dataset(dataset_id).list_items(clean=True)
-        data: list = dataset.items
-
-        if aid.fields:
-            Actor.log.debug("Selecting the following fields %s", aid.fields)
-            data = [{key: get_nested_value(d, key) for key in aid.fields} for d in data]
-            data = [d for d in data if d]
-
-        if encoding := assistant and tiktoken.encoding_for_model(assistant.model) or None:
-            data = await split_data_if_required(data, encoding)
-        else:
-            data = [data]
+        assistant = await check_inputs(client, aid, payload)
 
         file_ids_to_delete = await get_file_ids_to_delete(
             client, aid.file_ids_to_delete, aid.file_prefix, aid.vector_store_id
         )
 
-        # 1 - Create files (also store in Apify's KV store if enabled)
-        files_created = await create_files(client, data, aid.dataset_id, aid.file_prefix)
-        if aid.save_in_apify_key_value_store:
-            await save_in_apify_kv_store(files_created, data)
+        # 1 - create files from dataset or from key-value store
+        files_created = []
+        if aid.dataset_id:
+            files_created = await create_files_from_dataset(client, aclient_apify, aid, assistant)
+
+        if aid.save_files and aid.key_value_store_id:
+            files_created.extend(await create_files_from_key_value_store(client, aclient_apify, aid))
 
         # 2 - remove files from vector store
-        await delete_files_from_vector_store(client, aid.vector_store_id, file_ids_to_delete)
+        if file_ids_to_delete:
+            await delete_files_from_vector_store(client, aid.vector_store_id, file_ids_to_delete)
 
         #  3 - add to vector store in batch and poll for results
-        await create_files_vector_store_and_poll(client, aid.vector_store_id, files_created)
+        if files_created:
+            await create_files_vector_store_and_poll(client, aid.vector_store_id, files_created)
 
         # 4 - delete all files
-        await delete_files(client, file_ids_to_delete)
+        if file_ids_to_delete:
+            await delete_files(client, file_ids_to_delete)
 
 
-async def check_inputs(client: AsyncOpenAI, aid: Inputs, payload: dict) -> tuple[Assistant | None, str]:
+async def check_inputs(client: AsyncOpenAI, aid: Inputs, payload: dict) -> Assistant | None:
     """Check that provided input exists at OpenAI or at Apify."""
 
     if not (await client.beta.vector_stores.retrieve(aid.vector_store_id)):
@@ -70,32 +65,95 @@ async def check_inputs(client: AsyncOpenAI, aid: Inputs, payload: dict) -> tuple
         await Actor.fail(status_message=f"Assistant with ID: {aid.assistant_id} was not found at the OpenAI")
 
     resource = payload.get("payload", {}).get("resource", {})
-    if not (dataset_id := resource.get("defaultDatasetId") or aid.dataset_id or ""):
-        msg = """No Dataset ID provided. It should be provided either in payload or in actor_input."""
+    dataset_id = resource.get("defaultDatasetId") or aid.dataset_id or ""
+    key_value_store_id = resource.get("defaultKeyValueStoreId") or aid.key_value_store_id or ""
+
+    if not (dataset_id or key_value_store_id):
+        msg = """No Dataset ID or Key Value Store ID provided.
+        It should be provided either in payload or in actor_input."""
         await Actor.fail(status_message=msg)
 
     aid.dataset_id = dataset_id
-    return assistant, dataset_id
+    aid.key_value_store_id = key_value_store_id
+    return assistant
 
 
-async def create_files(
-    client: AsyncOpenAI, data: list[dict], dataset_id: str | None, file_prefix: str | None
+async def create_files_from_dataset(
+    client: AsyncOpenAI, aclient_apify: ApifyClientAsync, aid: Inputs, assistant: Assistant | None
 ) -> list[FileObject]:
     """Create files in OpenAI."""
+
+    dataset = await aclient_apify.dataset(str(aid.dataset_id)).list_items(clean=True)
+    data: list = dataset.items
+
+    if aid.fields:
+        Actor.log.debug("Selecting the following fields %s", aid.fields)
+        data = [{key: get_nested_value(d, key) for key in aid.fields} for d in data]
+        data = [d for d in data if d]
+
+    if encoding := assistant and tiktoken.encoding_for_model(assistant.model) or None:
+        data = await split_data_if_required(data, encoding)
+    else:
+        data = [data]
 
     files_created = []
     try:
         for i, d in enumerate(data):
-            prefix = f"{file_prefix}_{dataset_id}" if file_prefix else f"{dataset_id}"
-            filename = f"{prefix}_{i}.json"
-            file = await client.files.create(file=(filename, json.dumps(d).encode("utf-8")), purpose="assistants")
-            Actor.log.debug("Created OpenAI file: %s, id: %s", file.filename, file.id)
-            await Actor.push_data({"filename": filename, "file_id": file.id, "status": "created"})
-            files_created.append(file)
+            prefix = f"{aid.file_prefix}_{aid.dataset_id}" if aid.file_prefix else f"{aid.dataset_id}"
+            filename = f"{prefix}_{i}"
+            if f := await create_openai_file(client, filename, json.dumps(d).encode("utf-8")):
+                files_created.append(f)
     except Exception as e:
         Actor.log.exception(e)
 
+    # store files in Apify's KV store if enabled
+    if aid.save_in_apify_key_value_store:
+        await save_in_apify_kv_store(files_created, data)
+
     return files_created
+
+
+async def create_files_from_key_value_store(
+    client: AsyncOpenAI, aclient_apify: ApifyClientAsync, aid: Inputs
+) -> list[FileObject]:
+    """Create files from Apify key-value store."""
+
+    files_created = []
+
+    kv_store = aclient_apify.key_value_store(str(aid.key_value_store_id))
+    keys = await kv_store.list_keys()
+    Actor.log.info("Creating files from Apify key-value store, key value store items: %s", keys.get("items", []))
+
+    for item in keys.get("items", []):
+
+        key = item.get("key")
+        ext = f".{key.split('.')[-1]}"
+        prefix = f"{aid.file_prefix}_{aid.key_value_store_id}" if aid.file_prefix else f"{aid.key_value_store_id}"
+
+        if ext in OPENAI_SUPPORTED_FILES:
+            Actor.log.debug("Get file from Apify's key value store: %s", key)
+            if d := await kv_store.get_record_as_bytes(key):
+                filename = f"{prefix}_{d['key']}"
+                if f := await create_openai_file(client, filename, BytesIO(d["value"])):
+                    files_created.append(f)
+        else:
+            Actor.log.debug("Skipping file %s not supported by OpenAI", item.get("key"))
+
+    return files_created
+
+
+async def create_openai_file(client: AsyncOpenAI, filename: str, data: bytes | BytesIO) -> FileObject | None:
+    """Create OpenAI file."""
+
+    try:
+        file = await client.files.create(file=(filename, data), purpose="assistants")
+        Actor.log.debug("Created OpenAI file: %s, id: %s", file.filename, file.id)
+        await Actor.push_data({"filename": filename, "file_id": file.id, "status": "created"})
+        return file  # noqa: TRY300
+    except Exception as e:
+        Actor.log.exception(e)
+
+    return None
 
 
 async def create_files_vector_store_and_poll(client: AsyncOpenAI, vs_id: str, files_created: list) -> None:
@@ -175,8 +233,8 @@ async def get_file_ids_to_delete(
 
     if set(file_ids) - set(files_to_delete):
         Actor.log.warning(
-            "The following file ids were provided in the input but not found in the vector store: %s, If you want to "
-            "really delete them, you will have to do it manually.",
+            "The following file ids were provided in the input but were not found in the vector store: %s, "
+            "If you want to really delete them, you will have to do it manually.",
             set(file_ids) - set(files_to_delete),
         )
 
