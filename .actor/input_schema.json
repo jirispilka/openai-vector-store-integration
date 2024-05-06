@@ -63,7 +63,7 @@
             "editor": "textfield"
         },
         "save_in_apify_key_value_store": {
-            "title": "Save files (pdf, ) also in Apify key-value store",
+            "title": "Save all files in the Apify key-value store",
             "type": "boolean",
             "description": "Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)",
             "default": false
