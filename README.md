@@ -1,11 +1,14 @@
 # OpenAI Vector Store Integration (OpenAI Assistant)
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/jirispilka/openai-vector-store-integration/blob/main/LICENSE)
+[![Build & Unit Tests](https://github.com/jirispilka/openai-vector-store-integrationd/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/jirispilka/openai-vector-store-integration/actions/workflows/main.yml)
+
 The Apify OpenAI Vector Store integration allows dynamic updates to the OpenAI Assistant files.
 It assumes that you have already created an [OpenAI Assistant](https://platform.openai.com/docs/assistants/overview/agents)
 and [OpenAI Vector Store](https://platform.openai.com/docs/assistants/tools/file-search/vector-stores)
 and you need to regularly update the files to provide up-to-date responses.
 
-⚠️ **Note**: This Actor is meant to be used together with other Actors' integration sections.
+💡 **Note**: This Actor is meant to be used together with other Actors' integration sections.
 For instance, if you are using the [Website Content Crawler](https://apify.com/apify/website-content-crawler),
 you can activate Vector Store Files integration to save web data for your OpenAI assistant.
 
