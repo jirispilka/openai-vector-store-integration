@@ -27,7 +27,8 @@ async def empty(args, **kwargs) -> None:  # type: ignore
     ...
 
 
-@pytest.mark.vcr()
+@pytest.mark.asyncio
+@pytest.mark.vcr(filter_headers=["Authorization"])
 @pytest.mark.integration
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
