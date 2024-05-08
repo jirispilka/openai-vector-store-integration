@@ -83,7 +83,7 @@ async def check_inputs(client: AsyncOpenAI, aid: Inputs, payload: dict) -> Assis
 
 
 async def create_files_from_dataset(
-    client: AsyncOpenAI, aclient_apify: ApifyClientAsync, aid: Inputs, assistant: Assistant | None
+    client: AsyncOpenAI, aclient_apify: ApifyClientAsync, aid: Inputs, assistant: Assistant | None = None
 ) -> list[FileObject]:
     """Create files in OpenAI."""
 
@@ -126,7 +126,7 @@ async def create_files_from_key_value_store(
 
     kv_store = aclient_apify.key_value_store(str(aid.key_value_store_id))
     keys = await kv_store.list_keys()
-    Actor.log.info("Creating files from Apify key-value store, key value store items: %s", keys.get("items", []))
+    Actor.log.debug("Creating files from Apify key-value store, key value store items: %s", keys.get("items", []))
 
     for item in keys.get("items", []):
 
@@ -163,13 +163,14 @@ async def create_file(client: AsyncOpenAI, filename: str, data: bytes | BytesIO)
     return None
 
 
-async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> FileDeleted | None:
+async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> list[FileDeleted]:
     """
     Delete OpenAI files.
 
     https://platform.openai.com/docs/api-reference/files/delete
     """
     files_to_delete = files_to_delete or []
+    deleted_files = []
 
     Actor.log.debug("Files ids to delete: %s", files_to_delete)
     try:
@@ -177,11 +178,11 @@ async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> FileD
             file_ = await client.files.delete(_id)
             Actor.log.debug("Deleted OpenAI File with id: %s", _id)
             await Actor.push_data({"filename": "", "file_id": file_.id, "status": "deleted"})
-            return file_
+            deleted_files.append(file_)
     except Exception as e:
         Actor.log.exception(e)
 
-    return None
+    return deleted_files
 
 
 async def create_files_vector_store_and_poll(
