@@ -10,13 +10,13 @@ from pydantic import BaseModel, Field
 
 
 class OpenaiVectorStoreIntegration(BaseModel):
-    vector_store_id: str = Field(
+    vectorStoreId: str = Field(
         ..., description='Vector Store ID', title='Vector Store ID'
     )
-    openai_api_key: str = Field(
+    openaiApiKey: str = Field(
         ..., description='OpenAI API KEY', title='OpenAI API KEY'
     )
-    assistant_id: Optional[str] = Field(
+    assistantId: Optional[str] = Field(
         None,
         description='The ID of an OpenAI Assistant. This parameter is required only when a file exceeds the OpenAI size limit of 5,000,000 tokens (as of 2024-04-23).\n\n When necessary, the model associated with the assistant is utilized to count tokens and split the large file into smaller, manageable segments.',
         title='Assistant ID',
@@ -26,33 +26,33 @@ class OpenaiVectorStoreIntegration(BaseModel):
         description='A list of fields which should be selected from the items, only these fields will remain in the resulting record objects.\n\n For example, when using the website content crawler, you might select fields such as `text` and `url`, and `metadata.title` among others, to be included in the vector store file.',
         title='A list of fields which should be selected from the items',
     )
-    file_ids_to_delete: Optional[List] = Field(
+    fileIdsToDelete: Optional[List] = Field(
         None,
         description='Delete specified file ids associated with vector store. This can be useful when one needs to delete files that are no longer needed.',
         title='Array of vector store file ids to delete',
     )
-    file_prefix: Optional[str] = Field(
+    filePrefix: Optional[str] = Field(
         None,
         description="Using a file prefix streamlines the management of vector store file updates by eliminating the need to track each file's ID. For instance, if you set the file_prefix to 'apify-advisor', the Actor will initially locate all files in the vector store with this prefix. Subsequently, it will delete these files and create new ones, also prefixed accordingly.",
         min_length=5,
         title='Delete/Create vector store files with a prefix',
     )
-    save_files: Optional[bool] = Field(
+    saveFiles: Optional[bool] = Field(
         True,
         description="Enables saving files from Apify's key-value store to OpenAI's file store. Useful when utilizing Apify’s website content crawler with the 'saveFiles' option, allowing the found files to be directly store and used in the assistant.",
         title='Save files from apify key-value store to OpenAI File Store',
     )
-    dataset_id: Optional[str] = Field(
+    datasetId: Optional[str] = Field(
         None,
         description='Dataset ID (when running standalone without integration, typically when debugging or in ad-hoc settings)',
         title='Dataset ID',
     )
-    key_value_store_id: Optional[str] = Field(
+    keyValueStoreId: Optional[str] = Field(
         None,
         description='Key-value store ID (when running standalone without integration, typically when debugging or in ad-hoc settings)',
         title='Key-value store ID',
     )
-    save_in_apify_key_value_store: Optional[bool] = Field(
+    saveInApifyKeyValueStore: Optional[bool] = Field(
         False,
         description='Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)',
         title='Save files (pdf, ) also in Apify key-value store',

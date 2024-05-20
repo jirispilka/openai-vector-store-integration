@@ -49,7 +49,7 @@ async def test_openai_files_integration(monkeypatch) -> None:  # type: ignore
 
 
 @pytest.mark.asyncio
-# @pytest.mark.integration
+@pytest.mark.integration
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
@@ -59,9 +59,9 @@ async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: 
     monkeypatch.setattr(Actor, "push_data", empty)
 
     aid = Inputs(  # type: ignore
-        vector_store_id="jeGeD1RGQfUMtdAh3",
-        openai_api_key="test_openai_api_key",
-        file_prefix="unittest_",
+        vectorStoreId="jeGeD1RGQfUMtdAh3",
+        openaiApiKey="test_openai_api_key",
+        filePrefix="unittest_",
         fields=["text"],
     )
 
@@ -76,7 +76,7 @@ async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: 
     assert files_created
 
     file = files_created[0]
-    assert file.filename.startswith(str(aid.file_prefix)), "File prefix does not match"
+    assert file.filename.startswith(str(aid.filePrefix)), "File prefix does not match"
 
     # Check that file was created
     file_r = await client.files.retrieve(file.id)
@@ -99,11 +99,11 @@ async def test_create_files_from_dataset(monkeypatch) -> None:  # type: ignore
     monkeypatch.setattr(Actor, "push_data", empty)
 
     aid = Inputs(  # type: ignore
-        vector_store_id="test_vector_store_id",
-        dataset_id="test_dataset_id",
+        vectorStoreId="test_vector_store_id",
+        datasetId="test_dataset_id",
         fields=["text"],
-        openai_api_key="test_openai_api_key",
-        file_prefix="unittest_",
+        openaiApiKey="test_openai_api_key",
+        filePrefix="unittest_",
     )
 
     class MockDatasetItems:
@@ -120,7 +120,7 @@ async def test_create_files_from_dataset(monkeypatch) -> None:  # type: ignore
     assert files_created
 
     file = files_created[0]
-    assert file.filename.startswith(str(aid.file_prefix)), "File prefix does not match"
+    assert file.filename.startswith(str(aid.filePrefix)), "File prefix does not match"
 
     # Check that file was created
     file_r = await client.files.retrieve(file.id)
