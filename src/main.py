@@ -10,7 +10,7 @@ from apify_client import ApifyClientAsync
 from openai import AsyncOpenAI, NotFoundError
 
 from .constants import OPENAI_SUPPORTED_FILES
-from .input_model import OpenaiVectorStoreIntegration as Inputs
+from .input_model import OpenaiVectorStoreIntegration as ActorInput
 from .utils import get_nested_value, split_data_if_required
 
 if TYPE_CHECKING:
@@ -24,75 +24,75 @@ async def main() -> None:
     async with Actor:
 
         payload = await Actor.get_input()
-        aid = Inputs(**payload)
+        actor_input = ActorInput(**payload)
 
-        client = AsyncOpenAI(api_key=aid.openaiApiKey)
+        client = AsyncOpenAI(api_key=actor_input.openaiApiKey)
         aclient_apify = ApifyClientAsync()
 
-        assistant = await check_inputs(client, aid, payload)
+        assistant = await check_inputs(client, actor_input, payload)
 
         file_ids_to_delete = await get_vector_store_file_ids(
-            client, aid.vectorStoreId, aid.fileIdsToDelete, aid.filePrefix
+            client, actor_input.vectorStoreId, actor_input.fileIdsToDelete, actor_input.filePrefix
         )
 
         # 1 - create files from dataset or from key-value store
         files_created: list[str] = []
-        if aid.datasetId:
-            files: list[FileObject] = await create_files_from_dataset(client, aclient_apify, aid, assistant)
+        if actor_input.datasetId:
+            files: list[FileObject] = await create_files_from_dataset(client, aclient_apify, actor_input, assistant)
             files_created.extend(f.id for f in files)
 
-        if aid.saveFiles and aid.keyValueStoreId:
-            files = await create_files_from_key_value_store(client, aclient_apify, aid)
+        if actor_input.saveFiles and actor_input.keyValueStoreId:
+            files = await create_files_from_key_value_store(client, aclient_apify, actor_input)
             files_created.extend(f.id for f in files)
 
         # 2 - remove files from vector store
         if file_ids_to_delete:
-            await delete_files_from_vector_store(client, aid.vectorStoreId, file_ids_to_delete)
+            await delete_files_from_vector_store(client, actor_input.vectorStoreId, file_ids_to_delete)
 
         #  3 - add to vector store in batch and poll for results
         if files_created:
-            await create_files_vector_store_and_poll(client, aid.vectorStoreId, files_created)
+            await create_files_vector_store_and_poll(client, actor_input.vectorStoreId, files_created)
 
         # 4 - delete all files
         if file_ids_to_delete:
             await delete_files(client, file_ids_to_delete)
 
 
-async def check_inputs(client: AsyncOpenAI, aid: Inputs, payload: dict) -> Assistant | None:
+async def check_inputs(client: AsyncOpenAI, actor_input: ActorInput, payload: dict) -> Assistant | None:
     """Check that provided input exists at OpenAI or at Apify."""
 
-    if not (await client.beta.vector_stores.retrieve(aid.vectorStoreId)):
-        await Actor.fail(status_message=f"Vector Store with ID: {aid.vectorStoreId} was not found at the OpenAI")
+    if not (await client.beta.vector_stores.retrieve(actor_input.vectorStoreId)):
+        await Actor.fail(status_message=f"Vector Store with ID: {actor_input.vectorStoreId} was not found at the OpenAI")
 
     assistant = None
-    if aid.assistantId and not (assistant := await client.beta.assistants.retrieve(aid.assistantId)):
-        await Actor.fail(status_message=f"Assistant with ID: {aid.assistantId} was not found at the OpenAI")
+    if actor_input.assistantId and not (assistant := await client.beta.assistants.retrieve(actor_input.assistantId)):
+        await Actor.fail(status_message=f"Assistant with ID: {actor_input.assistantId} was not found at the OpenAI")
 
     resource = payload.get("payload", {}).get("resource", {})
-    dataset_id = resource.get("defaultDatasetId") or aid.datasetId or ""
-    key_value_store_id = resource.get("defaultKeyValueStoreId") or aid.keyValueStoreId or ""
+    dataset_id = resource.get("defaultDatasetId") or actor_input.datasetId or ""
+    key_value_store_id = resource.get("defaultKeyValueStoreId") or actor_input.keyValueStoreId or ""
 
     if not (dataset_id or key_value_store_id):
         msg = """No Dataset ID or Key Value Store ID provided.
         It should be provided either in payload or in actor_input."""
         await Actor.fail(status_message=msg)
 
-    aid.datasetId = dataset_id
-    aid.keyValueStoreId = key_value_store_id
+    actor_input.datasetId = dataset_id
+    actor_input.keyValueStoreId = key_value_store_id
     return assistant
 
 
 async def create_files_from_dataset(
-    client: AsyncOpenAI, aclient_apify: ApifyClientAsync, aid: Inputs, assistant: Assistant | None = None
+    client: AsyncOpenAI, aclient_apify: ApifyClientAsync, actor_input: ActorInput, assistant: Assistant | None = None
 ) -> list[FileObject]:
     """Create files in OpenAI."""
 
-    dataset = await aclient_apify.dataset(str(aid.datasetId)).list_items(clean=True)
+    dataset = await aclient_apify.dataset(str(actor_input.datasetId)).list_items(clean=True)
     data: list = dataset.items
 
-    if aid.fields:
-        Actor.log.debug("Selecting the following fields %s", aid.fields)
-        data = [{key: get_nested_value(d, key) for key in aid.fields} for d in data]
+    if actor_input.datasetFields:
+        Actor.log.debug("Selecting the following fields %s", actor_input.datasetFields)
+        data = [{key: get_nested_value(d, key) for key in actor_input.datasetFields} for d in data]
         data = [d for d in data if d]
 
     if encoding := assistant and tiktoken.encoding_for_model(assistant.model) or None:
@@ -103,7 +103,7 @@ async def create_files_from_dataset(
     files_created = []
     try:
         for i, d in enumerate(data):
-            prefix = f"{aid.filePrefix}_{aid.datasetId}" if aid.filePrefix else f"{aid.datasetId}"
+            prefix = f"{actor_input.filePrefix}_{actor_input.datasetId}" if actor_input.filePrefix else f"{actor_input.datasetId}"
             filename = f"{prefix}_{i}"
             if f := await create_file(client, filename, json.dumps(d).encode("utf-8")):
                 files_created.append(f)
@@ -111,20 +111,20 @@ async def create_files_from_dataset(
         Actor.log.exception(e)
 
     # store files in Apify's KV store if enabled
-    if aid.saveInApifyKeyValueStore:
+    if actor_input.saveInApifyKeyValueStore:
         await save_in_apify_kv_store(files_created, data)
 
     return files_created
 
 
 async def create_files_from_key_value_store(
-    client: AsyncOpenAI, aclient_apify: ApifyClientAsync, aid: Inputs
+    client: AsyncOpenAI, aclient_apify: ApifyClientAsync, actor_input: ActorInput
 ) -> list[FileObject]:
     """Create files from Apify key-value store."""
 
     files_created = []
 
-    kv_store = aclient_apify.key_value_store(str(aid.keyValueStoreId))
+    kv_store = aclient_apify.key_value_store(str(actor_input.keyValueStoreId))
     keys = await kv_store.list_keys()
     Actor.log.debug("Creating files from Apify key-value store, key value store items: %s", keys.get("items", []))
 
@@ -132,7 +132,7 @@ async def create_files_from_key_value_store(
 
         key = item.get("key")
         ext = f".{key.split('.')[-1]}"
-        prefix = f"{aid.filePrefix}_{aid.keyValueStoreId}" if aid.filePrefix else f"{aid.keyValueStoreId}"
+        prefix = f"{actor_input.filePrefix}_{actor_input.keyValueStoreId}" if actor_input.filePrefix else f"{actor_input.keyValueStoreId}"
 
         if ext in OPENAI_SUPPORTED_FILES:
             Actor.log.debug("Get file from Apify's key value store: %s", key)

@@ -7,12 +7,11 @@
         "vectorStoreId": {
             "title": "Vector Store ID",
             "type": "string",
-            "description": "Vector Store ID",
+            "description": "Vector Store ID where the data will be stored",
             "editor": "textfield"
         },
         "openaiApiKey": {
             "title": "OpenAI API KEY",
-            "description": "OpenAI API KEY",
             "type": "string",
             "editor": "textfield",
             "isSecret": true
@@ -23,10 +22,10 @@
             "description": "The ID of an OpenAI Assistant. This parameter is required only when a file exceeds the OpenAI size limit of 5,000,000 tokens (as of 2024-04-23).\n\n When necessary, the model associated with the assistant is utilized to count tokens and split the large file into smaller, manageable segments.",
             "editor": "textfield"
         },
-        "fields": {
-            "title": "A list of fields which should be selected from the items",
+        "datasetFields": {
+            "title": "A list of dataset fields which should be selected from the dataset",
             "type": "array",
-            "description": "A list of fields which should be selected from the items, only these fields will remain in the resulting record objects.\n\n For example, when using the website content crawler, you might select fields such as `text` and `url`, and `metadata.title` among others, to be included in the vector store file.",
+            "description": "A list of dataset fields which should be selected from the items, only these dataset fields will remain in the resulting record objects.\n\n For example, when using the website content crawler, you might select dataset fields such as `text` and `url`, and `metadata.title` among others, to be included in the vector store file.",
             "default": [ "url", "text"],
             "prefill": ["url", "text", "metadata.title"],
             "editor": "json"
@@ -53,13 +52,13 @@
         "datasetId": {
             "title": "Dataset ID",
             "type": "string",
-            "description": "Dataset ID (when running standalone without integration, typically when debugging or in ad-hoc settings)",
+            "description": "The Dataset ID is provided automatically when the actor is set up as an integration. You can fill it in explicitly here to enable debugging of the actor",
             "editor": "textfield"
         },
         "keyValueStoreId": {
             "title": "Key-value store ID",
             "type": "string",
-            "description": "Key-value store ID (when running standalone without integration, typically when debugging or in ad-hoc settings)",
+            "description": "Apify's key value store ID is provided automatically when the actor is set up as an integration. You can fill it in explicitly here to enable debugging of the actor",
             "editor": "textfield"
         },
         "saveInApifyKeyValueStore": {
@@ -71,7 +70,7 @@
     },
     "required": [
         "vectorStoreId",
-        "fields",
+        "datasetFields",
         "openaiApiKey"
     ]
 }

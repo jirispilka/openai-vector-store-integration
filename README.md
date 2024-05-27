@@ -44,7 +44,7 @@ Refer to [input schema](.actor/input_schema.json) for details.
 - `assistantId`: The ID of an OpenAI Assistant. This parameter is required only when a file exceeds the OpenAI
    size limit of 5,000,000 tokens (as of 2024-04-23). When necessary, the model associated with the assistant is
    utilized to count tokens and split the large file into smaller, manageable segments.
-- `fields` - Array of fields you want to save, e.g., `["url", "text", "metadata.title"]`.
+- `datasetFields` - Array of datasetFields you want to save, e.g., `["url", "text", "metadata.title"]`.
 - `fileIdsToDelete` - Delete specified file IDs from vector store as needed.
 - `filePrefix` - Delete and create files using a filePrefix, streamlining vector store updates.
 - `datasetId`: [Debug] Dataset ID (when running Actor as standalone without integration).
@@ -53,7 +53,7 @@ Refer to [input schema](.actor/input_schema.json) for details.
 
 ## Outputs
 
-This integration saves selected fields from your Actor to the OpenAI Assistant and optionally to Actor Key Value Storage (useful for debugging).
+This integration saves selected `datasetFields` from your Actor to the OpenAI Assistant and optionally to Actor Key Value Storage (useful for debugging).
 
 ## Want to talk to other devs or get help?
 

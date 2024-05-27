@@ -6,7 +6,7 @@ from apify import Actor
 from apify_client import ApifyClientAsync
 from dotenv import load_dotenv
 
-from src.input_model import OpenaiVectorStoreIntegration as Inputs
+from src.input_model import OpenaiVectorStoreIntegration as ActorInput
 from src.main import create_file, create_files_from_dataset, create_files_from_key_value_store, delete_files
 
 load_dotenv()
@@ -58,11 +58,11 @@ async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: 
 
     monkeypatch.setattr(Actor, "push_data", empty)
 
-    aid = Inputs(  # type: ignore
+    actor_input = ActorInput(  # type: ignore
         vectorStoreId="jeGeD1RGQfUMtdAh3",
         openaiApiKey="test_openai_api_key",
         filePrefix="unittest_",
-        fields=["text"],
+        datasetFields=["text"],
     )
 
     mock_apify = AsyncMock(spec=ApifyClientAsync)
@@ -72,11 +72,11 @@ async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: 
     )
 
     # Call the function with the mock objects
-    files_created = await create_files_from_key_value_store(client, mock_apify, aid)
+    files_created = await create_files_from_key_value_store(client, mock_apify, actor_input)
     assert files_created
 
     file = files_created[0]
-    assert file.filename.startswith(str(aid.filePrefix)), "File prefix does not match"
+    assert file.filename.startswith(str(actor_input.filePrefix)), "File prefix does not match"
 
     # Check that file was created
     file_r = await client.files.retrieve(file.id)
@@ -98,10 +98,10 @@ async def test_create_files_from_dataset(monkeypatch) -> None:  # type: ignore
 
     monkeypatch.setattr(Actor, "push_data", empty)
 
-    aid = Inputs(  # type: ignore
+    actor_input = ActorInput(  # type: ignore
         vectorStoreId="test_vector_store_id",
         datasetId="test_dataset_id",
-        fields=["text"],
+        datasetFields=["text"],
         openaiApiKey="test_openai_api_key",
         filePrefix="unittest_",
     )
@@ -116,11 +116,11 @@ async def test_create_files_from_dataset(monkeypatch) -> None:  # type: ignore
     mock_apify.dataset.return_value.list_items = AsyncMock(return_value=MockDatasetItems([{"text": "test_text"}]))
 
     # Call the function with the mock objects
-    files_created = await create_files_from_dataset(client, mock_apify, aid)
+    files_created = await create_files_from_dataset(client, mock_apify, actor_input)
     assert files_created
 
     file = files_created[0]
-    assert file.filename.startswith(str(aid.filePrefix)), "File prefix does not match"
+    assert file.filename.startswith(str(actor_input.filePrefix)), "File prefix does not match"
 
     # Check that file was created
     file_r = await client.files.retrieve(file.id)
