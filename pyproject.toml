@@ -14,17 +14,21 @@ openai = "^1.17.0"
 python = "^3.12"
 tiktoken = "^0.6.0"
 python-dotenv = "^1.0.1"
-mypy = "^1.9.0"
 
 [tool.poetry.group.dev.dependencies]
 datamodel-code-generator = "^0.25.5"
 ipython = "^8.23.0"
-pre-commit = "^3.7.0"
-ruff = "^0.3.5"
+mypy = "^1.9.0"
 pandas = "^2.2.2"
+pre-commit = "^3.7.0"
+pytest = "^8.2.0"
+pytest-asyncio = "^0.23.6"
+pytest-integration-mark = "^0.2.0"
+pytest-vcr = "^1.0.2"
+ruff = "^0.3.5"
 
 [tool.ruff]
-line-length = 120
+line-length = 150
 exclude = ["src/input_model.py"]
 
 [tool.ruff.lint]

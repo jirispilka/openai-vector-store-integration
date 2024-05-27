@@ -72,24 +72,27 @@ def split_data_into_batches(data: list, max_tokens: int, encoding: tiktoken.core
 
     Example:
     >>> d = [{"name": "Alice"}, {"name": "Bob"}, {"name": "Carol"}]
-    >>> encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
-    >>> batches = split_data_into_batches(d, 15, encoding)
+    >>> enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    >>> batches = split_data_into_batches(d, 15, enc)
     >>> print(batches)
     [[{'name': 'Alice'}, {'name': 'Bob'}], [{'name': 'Carol'}]]
     """
 
     all_batches = []
     batch_tok, batch_start = 0, 0
-    for i, v in enumerate(data):
-        t = len(encoding.encode(json.dumps(v)))
-        if batch_tok + t < max_tokens:
-            batch_tok += t
-        else:
-            if batch_tok > 0:
-                all_batches.append(data[batch_start:i])
-            batch_tok, batch_start = t, i
-    if batch_tok > 0:
-        all_batches.append(data[batch_start:])
+    try:
+        for i, v in enumerate(data):
+            t = len(encoding.encode(json.dumps(v)))
+            if batch_tok + t < max_tokens:
+                batch_tok += t
+            else:
+                if batch_tok > 0:
+                    all_batches.append(data[batch_start:i])
+                batch_tok, batch_start = t, i
+        if batch_tok > 0:
+            all_batches.append(data[batch_start:])
+    except Exception as e:
+        Actor.log.exception(e)
 
     return all_batches
 

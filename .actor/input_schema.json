@@ -4,62 +4,75 @@
     "description": "Use Apify's dataset and update OpenAI Vector Store (for OpenAI Assistant V2)",
     "schemaVersion": 1,
     "properties": {
-        "vector_store_id": {
+        "vectorStoreId": {
             "title": "Vector Store ID",
             "type": "string",
-            "description": "Vector Store ID",
+            "description": "Vector Store ID where the data will be stored",
             "editor": "textfield"
         },
-        "openai_api_key": {
+        "openaiApiKey": {
             "title": "OpenAI API KEY",
-            "description": "OpenAI API KEY",
             "type": "string",
+            "description": "OpenAI API KEY",
             "editor": "textfield",
             "isSecret": true
         },
-        "assistant_id": {
+        "assistantId": {
             "title": "Assistant ID",
             "type": "string",
             "description": "The ID of an OpenAI Assistant. This parameter is required only when a file exceeds the OpenAI size limit of 5,000,000 tokens (as of 2024-04-23).\n\n When necessary, the model associated with the assistant is utilized to count tokens and split the large file into smaller, manageable segments.",
             "editor": "textfield"
         },
-        "fields": {
-            "title": "A list of fields which should be selected from the items",
+        "datasetFields": {
+            "title": "A list of dataset fields which should be selected from the dataset",
             "type": "array",
-            "description": "A list of fields which should be selected from the items, only these fields will remain in the resulting record objects.\n\n For example, when using the website content crawler, you might select fields such as `text` and `url`, and `metadata.title` among others, to be included in the vector store file.",
+            "description": "A list of dataset fields which should be selected from the items, only these dataset fields will remain in the resulting record objects.\n\n For example, when using the website content crawler, you might select dataset fields such as `text` and `url`, and `metadata.title` among others, to be included in the vector store file.",
             "default": [ "url", "text"],
             "prefill": ["url", "text", "metadata.title"],
             "editor": "json"
         },
-        "file_ids_to_delete": {
+        "fileIdsToDelete": {
             "title": "Array of vector store file ids to delete",
             "type": "array",
             "description": "Delete specified file ids associated with vector store. This can be useful when one needs to delete files that are no longer needed.",
             "editor": "json"
         },
-        "file_prefix": {
+        "filePrefix": {
             "title": "Delete/Create vector store files with a prefix",
             "type": "string",
-            "description": "Using a file prefix streamlines the management of vector store file updates by eliminating the need to track each file's ID. For instance, if you set the file_prefix to 'apify-advisor', the Actor will initially locate all files in the vector store with this prefix. Subsequently, it will delete these files and create new ones, also prefixed accordingly.",
+            "description": "Using a file prefix streamlines the management of vector store file updates by eliminating the need to track each file's ID. For instance, if you set the filePrefix to 'apify-advisor', the Actor will initially locate all files in the vector store with this prefix. Subsequently, it will delete these files and create new ones, also prefixed accordingly.",
             "editor": "textfield",
             "minLength": 5
         },
-        "dataset_id": {
+        "saveCrawledFiles": {
+            "title": "Save crawled files (docs, pdf, pptx) to OpenAI File Store",
+            "type": "boolean",
+            "description": "Enables saving files from Apify's key-value store to OpenAI's file store. Useful when utilizing Apify’s website content crawler with the 'saveFiles' option, allowing the found files to be directly store and used in the assistant.",
+            "default": true
+        },
+        "datasetId": {
             "title": "Dataset ID",
             "type": "string",
-            "description": "Dataset ID (when running standalone without integration, typically when debugging or in ad-hoc settings)",
+            "description": "The Dataset ID is provided automatically when the actor is set up as an integration. You can fill it in explicitly here to enable debugging of the actor",
+            "editor": "textfield",
+            "sectionCaption": "Debugging options"
+        },
+        "keyValueStoreId": {
+            "title": "Key-value store ID",
+            "type": "string",
+            "description": "Apify's key value store ID is provided automatically when the actor is set up as an integration. You can fill it in explicitly here to enable debugging of the actor",
             "editor": "textfield"
         },
-        "save_in_apify_key_value_store": {
-            "title": "Save files also in Apify key-value store",
+        "saveInApifyKeyValueStore": {
+            "title": "Save all files in the Apify key-value store",
             "type": "boolean",
             "description": "Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)",
             "default": false
         }
     },
     "required": [
-        "vector_store_id",
-        "fields",
-        "openai_api_key"
+        "vectorStoreId",
+        "datasetFields",
+        "openaiApiKey"
     ]
 }
