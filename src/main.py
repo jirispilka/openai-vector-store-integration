@@ -104,7 +104,7 @@ async def create_files_from_dataset(
     try:
         for i, d in enumerate(data):
             prefix = f"{actor_input.filePrefix}_{actor_input.datasetId}" if actor_input.filePrefix else f"{actor_input.datasetId}"
-            filename = f"{prefix}_{i}"
+            filename = f"{prefix}_{i}.json"
             if f := await create_file(client, filename, json.dumps(d).encode("utf-8")):
                 files_created.append(f)
     except Exception as e:
