@@ -13,6 +13,7 @@
         "openaiApiKey": {
             "title": "OpenAI API KEY",
             "type": "string",
+            "description": "OpenAI API KEY",
             "editor": "textfield",
             "isSecret": true
         },
