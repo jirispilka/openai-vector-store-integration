@@ -44,7 +44,7 @@
             "editor": "textfield",
             "minLength": 5
         },
-        "saveFiles": {
+        "saveCrawledFiles": {
             "title": "Save crawled files (docs, pdf, pptx) to OpenAI File Store",
             "type": "boolean",
             "description": "Enables saving files from Apify's key-value store to OpenAI's file store. Useful when utilizing Apify’s website content crawler with the 'saveFiles' option, allowing the found files to be directly store and used in the assistant.",
@@ -54,7 +54,8 @@
             "title": "Dataset ID",
             "type": "string",
             "description": "The Dataset ID is provided automatically when the actor is set up as an integration. You can fill it in explicitly here to enable debugging of the actor",
-            "editor": "textfield"
+            "editor": "textfield",
+            "sectionCaption": "Debugging options"
         },
         "keyValueStoreId": {
             "title": "Key-value store ID",
