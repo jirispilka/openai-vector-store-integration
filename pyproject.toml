@@ -28,7 +28,7 @@ pytest-vcr = "^1.0.2"
 ruff = "^0.3.5"
 
 [tool.ruff]
-line-length = 120
+line-length = 150
 exclude = ["src/input_model.py"]
 
 [tool.ruff.lint]
