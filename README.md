@@ -19,9 +19,9 @@ The integration process includes:
 - Loading data from an Apify Actor
 - Processing the data to comply with OpenAI Assistant limits (max. 1000 files, max 5,000,000 tokens)
 - Creating OpenAI files [OpenAI Files](https://platform.openai.com/docs/api-reference/files)
-- [Optional] Removing existing files from the Vector Store (specified by `fileIdsToDelete` and/or `filePrefix`)
+- _[Optional]_ Removing existing files from the Vector Store (specified by `fileIdsToDelete` and/or `filePrefix`)
 - Adding the newly created files to the vector store.
-- [Optional] Deleting existing files from the OpenAI files (specified by `fileIdsToDelete` and/or `filePrefix`)
+- _[Optional]_ Deleting existing files from the OpenAI files (specified by `fileIdsToDelete` and/or `filePrefix`)
 
 ## How much does it cost?
 Find the average usage cost for this actor on the [pricing page](https://apify.com/pricing) under the `Which plan do I need?` section.
@@ -65,3 +65,15 @@ Utilize the Apify platform to [gather data for your large language models](https
 Our Actors can automatically ingest entire websites, such as customer documentation, knowledge bases, help centers,
 forums, blog posts, and other information sources to train or prompt your LLMs.
 Integrate Apify into your product and allow your customers to upload their content in minutes.
+
+## Example usage
+
+```json
+{
+  "assistantId": "YOUR-ASSISTANT-ID",
+  "datasetFields": ["text", "url", "metadata.title"],
+  "filePrefix": "apify_test_",
+  "openaiApiKey": "YOUR-OPENAI-API-KEY",
+  "vectorStoreId": "YOUR-VECTOR-STORE-ID"
+}
+```
