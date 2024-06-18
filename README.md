@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/jirispilka/openai-vector-store-integration/blob/main/LICENSE)
 [![Build & Unit Tests](https://github.com/jirispilka/openai-vector-store-integration/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/jirispilka/openai-vector-store-integration/actions/workflows/main.yml)
 
-The Apify OpenAI Vector Store integration allows dynamic updates to the OpenAI Assistant files.
+The Apify OpenAI Vector Store integration uploads data from Apify Actors to the OpenAI Vector Store (connected to the OpenAI Assistant).
 It assumes that you have already created an [OpenAI Assistant](https://platform.openai.com/docs/assistants/overview/agents) and [OpenAI Vector Store](https://platform.openai.com/docs/assistants/tools/file-search/vector-stores) and you need to regularly update the files to provide up-to-date responses.
 
 💡 **Note**: This Actor is meant to be used together with other Actors' integration sections.
@@ -47,9 +47,9 @@ Refer to [input schema](.actor/input_schema.json) for details.
 - `datasetFields` - Array of datasetFields you want to save, e.g., `["url", "text", "metadata.title"]`.
 - `fileIdsToDelete` - Delete specified file IDs from vector store as needed.
 - `filePrefix` - Delete and create files using a filePrefix, streamlining vector store updates.
-- `datasetId`: [Debug] Dataset ID (when running Actor as standalone without integration).
-- `keyValueStoreId`: [Debug] Key Value Store ID (when running Actor as standalone without integration).
-- `saveInApifyKeyValueStore`: [Debug] Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)
+- `datasetId`: _[Debug]_ Dataset ID (when running Actor as standalone without integration).
+- `keyValueStoreId`: _[Debug]_ Key Value Store ID (when running Actor as standalone without integration).
+- `saveInApifyKeyValueStore`: _[Debug]_ Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)
 
 ## Outputs
 
