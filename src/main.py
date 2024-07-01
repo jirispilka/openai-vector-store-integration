@@ -39,7 +39,7 @@ async def main() -> None:
             files: list[FileObject] = await create_files_from_dataset(client, aclient_apify, actor_input, assistant)
             files_created.extend(f.id for f in files)
 
-        if actor_input.saveFiles and actor_input.keyValueStoreId:
+        if actor_input.saveCrawledFiles and actor_input.keyValueStoreId:
             files = await create_files_from_key_value_store(client, aclient_apify, actor_input)
             files_created.extend(f.id for f in files)
 
@@ -70,7 +70,7 @@ async def check_inputs(client: AsyncOpenAI, actor_input: ActorInput, payload: di
     assistant = None
     if actor_input.assistantId and not (assistant := await client.beta.assistants.retrieve(actor_input.assistantId)):
         msg = f"Unable to find the Assistant with the ID: {actor_input.assistantId} on OpenAI. "
-        f"Please verify that the Assistant has been correctly created and that the `assistantId` provided is accurate. "
+        "Please verify that the Assistant has been correctly created and that the `assistantId` provided is accurate. "
         Actor.log.error(msg)
         await Actor.fail(status_message=msg)
 
