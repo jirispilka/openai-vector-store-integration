@@ -68,7 +68,6 @@ Integrate Apify into your product and allow your customers to upload their conte
 
 ## Save data from Website Content Crawler to OpenAI Vector Store
 
-
 To use this integration, you need an OpenAI account and an `OpenAI API KEY`.
 Additionally, you need to create an OpenAI Vector Store (vectorStoreId).
 
