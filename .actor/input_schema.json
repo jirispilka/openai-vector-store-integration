@@ -31,42 +31,42 @@
             "prefill": ["url", "text", "metadata.title"],
             "editor": "json"
         },
+        "filePrefix": {
+            "title": "Delete/Create vector store files with a prefix",
+            "type": "string",
+            "description": "Using a file prefix helps with the management of vector store file updates by eliminating the need to track each file's ID. For instance, if you set the filePrefix to 'apify-advisor', the Actor will initially locate all files in the vector store with this prefix. Subsequently, it will delete these files and create new ones, also prefixed accordingly.",
+            "editor": "textfield",
+            "minLength": 5
+        },
         "fileIdsToDelete": {
             "title": "Array of vector store file ids to delete",
             "type": "array",
             "description": "Delete specified file ids associated with vector store. This can be useful when one needs to delete files that are no longer needed.",
             "editor": "json"
         },
-        "filePrefix": {
-            "title": "Delete/Create vector store files with a prefix",
-            "type": "string",
-            "description": "Using a file prefix streamlines the management of vector store file updates by eliminating the need to track each file's ID. For instance, if you set the filePrefix to 'apify-advisor', the Actor will initially locate all files in the vector store with this prefix. Subsequently, it will delete these files and create new ones, also prefixed accordingly.",
-            "editor": "textfield",
-            "minLength": 5
-        },
         "saveCrawledFiles": {
             "title": "Save crawled files (docs, pdf, pptx) to OpenAI File Store",
             "type": "boolean",
-            "description": "Enables saving files from Apify's key-value store to OpenAI's file store. Useful when utilizing Apify’s website content crawler with the 'saveFiles' option, allowing the found files to be directly store and used in the assistant.",
+            "description": "Save files from Apify's key-value store to OpenAI's file store. Useful when utilizing Apify’s website content crawler with the 'saveFiles' option, allowing the found files to be directly store and used in the assistant.",
             "default": true
         },
         "datasetId": {
-            "title": "Dataset ID",
+            "title": "Apify's Dataset ID",
             "type": "string",
             "description": "The Dataset ID is provided automatically when the actor is set up as an integration. You can fill it in explicitly here to enable debugging of the actor",
             "editor": "textfield",
             "sectionCaption": "Debugging options"
         },
         "keyValueStoreId": {
-            "title": "Key-value store ID",
+            "title": "Apify's Key-value store ID (source for json, pdf, pptx files) ",
             "type": "string",
-            "description": "Apify's key value store ID is provided automatically when the actor is set up as an integration. You can fill it in explicitly here to enable debugging of the actor",
+            "description": "This is the ID for the Key-value store on Apify, which serves as the data source for json, pdf, and pptx files. This ID is automatically provided when the actor is integrated. However, you can manually enter the ID here for debugging purposes.",
             "editor": "textfield"
         },
         "saveInApifyKeyValueStore": {
-            "title": "Save all files in the Apify key-value store",
+            "title": "Save all created files in the Apify's key-value store",
             "type": "boolean",
-            "description": "Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)",
+            "description": "Save all created files in the Apify's Key-Value Store to easily check and retrieve all files (this is typically used when debugging)",
             "default": false
         }
     },
