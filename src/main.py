@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import tiktoken
 from apify import Actor
 from apify_client import ApifyClientAsync
-from openai import AsyncOpenAI, NotFoundError
+from openai import AsyncOpenAI
 
 from .constants import OPENAI_SUPPORTED_FILES
 from .input_model import OpenaiVectorStoreIntegration as ActorInput
@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 
 async def main() -> None:
     async with Actor:
-
         payload = await Actor.get_input()
         actor_input = ActorInput(**payload)
 
@@ -140,7 +139,6 @@ async def create_files_from_key_value_store(client: AsyncOpenAI, aclient_apify: 
     Actor.log.debug("Creating files from Apify key-value store, key value store items: %s", keys.get("items", []))
 
     for item in keys.get("items", []):
-
         key = item.get("key")
         ext = f".{key.split('.')[-1]}"
         prefix = f"{actor_input.filePrefix}_{actor_input.keyValueStoreId}" if actor_input.filePrefix else f"{actor_input.keyValueStoreId}"
@@ -180,10 +178,10 @@ async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> list[
 
     https://platform.openai.com/docs/api-reference/files/delete
     """
-    files_to_delete = files_to_delete or []
     deleted_files = []
+    files_to_delete = files_to_delete or []
+    Actor.log.debug("About to delete files from OpenAI. Number of files: %s", len(files_to_delete))
 
-    Actor.log.debug("Files ids to delete: %s", files_to_delete)
     try:
         for _id in files_to_delete:
             file_ = await client.files.delete(_id)
@@ -210,8 +208,10 @@ async def create_files_vector_store_and_poll(client: AsyncOpenAI, vs_id: str, fi
 async def delete_files_from_vector_store(client: AsyncOpenAI, vs_id: str, file_ids: list[str]) -> list[VectorStoreFileDeleted]:
     """Remove files from vector store. The files are not actually deleted, only removed."""
 
-    file_ids = file_ids or []
     deleted_files = []
+    file_ids = file_ids or []
+    Actor.log.debug("About to delete files from vector store. Number of files: %s", len(file_ids))
+
     try:
         for _id in file_ids:
             file_ = await client.beta.vector_stores.files.delete(_id, vector_store_id=vs_id)
@@ -226,15 +226,15 @@ async def delete_files_from_vector_store(client: AsyncOpenAI, vs_id: str, file_i
 async def get_files_by_prefix(client: AsyncOpenAI, file_prefix: str) -> list[str]:
     """Get files with a specific prefix from OpenAI's file store."""
 
-    files = await client.files.list()
-    return [f.id for f in files.data if f.filename.startswith(file_prefix)]
+    files = [f async for f in client.files.list()]
+    return [f.id for f in files if f.filename.startswith(file_prefix)]
 
 
 async def get_vector_store_files_by_ids(client: AsyncOpenAI, vs_id: str, file_ids: list[str]) -> list[str]:
     """Find files in vector store by file ids."""
 
-    vs_files = await client.beta.vector_stores.files.list(vector_store_id=vs_id)
-    files = [f.id for f in vs_files.data if f.id in file_ids]
+    vs_files = [f async for f in client.beta.vector_stores.files.list(vector_store_id=vs_id)]
+    files = [f.id for f in vs_files if f.id in file_ids]
 
     if set(file_ids) - set(files):
         Actor.log.warning(
@@ -247,26 +247,23 @@ async def get_vector_store_files_by_ids(client: AsyncOpenAI, vs_id: str, file_id
 
 
 async def get_vector_store_files_by_prefix(client: AsyncOpenAI, vs_id: str, file_prefix: str) -> list[str]:
-    """Find files in vector store by file prefix."""
+    """Find files in vector store by file prefix.
 
-    files = []
-    vs_files = await client.beta.vector_stores.files.list(vector_store_id=vs_id)
+    Get files with prefix from OpenAI's file store, then retrieve the files associated with the vector store and compare them.
+    """
 
-    for f in vs_files.data:
-        try:
-            file_ = await client.files.retrieve(f.id)
-            if file_.filename.startswith(file_prefix):
-                files.append(f.id)
-        except NotFoundError:  # noqa: PERF203
-            Actor.log.warning(
-                "File %s associated with vector store: %s was not found in the OpenAI Files. This "
-                "typically means that the file was deleted but is still associated with vector store."
-                "You need to solve this issue manually if desired.",
-                f.id,
-                vs_id,
-            )
+    files = await get_files_by_prefix(client, file_prefix)
+    vs_files = [f async for f in client.beta.vector_stores.files.list(vector_store_id=vs_id)]
 
-    return files
+    file_present = [f.id for f in vs_files if f.id in files]
+    for f in (f.id for f in vs_files if f.id not in files):
+        Actor.log.warning(
+            f"File {f} associated with vector store: {vs_id} was not found in the OpenAI Files. This "
+            "typically means that the file was deleted but is still associated with vector store."
+            "You need to solve this issue manually if desired.",
+        )
+
+    return file_present
 
 
 async def get_vector_store_file_ids(client: AsyncOpenAI, vs_id: str, file_ids: list | None, file_prefix: str | None) -> list[str]:
