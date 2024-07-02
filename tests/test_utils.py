@@ -27,7 +27,7 @@ def test_split_data_into_batches() -> None:
 async def test_split_data_if_required_small_data() -> None:
     data = [{"name": "Alice"}]
     result = await split_data_if_required(data, ENCODING)
-    assert result == [data]  # Expecting the data not to be split
+    assert result == [data], "Expecting the data not to be split"
 
 
 @pytest.mark.asyncio
@@ -35,5 +35,4 @@ async def test_split_data_if_required_large_data() -> None:
 
     data = [{"name": "Alice"}] * 1_000_000  # Large dataset
     result = await split_data_if_required(data, ENCODING)
-    # Check if data was split into batches as expected
-    assert len(result) > 1
+    assert len(result) > 1, "Expecting the data to be split"

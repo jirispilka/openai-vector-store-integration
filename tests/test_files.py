@@ -90,7 +90,7 @@ async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: 
 
 
 @pytest.mark.asyncio
-# @pytest.mark.integration
+@pytest.mark.integration
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
