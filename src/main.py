@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import tiktoken
 from apify import Actor
 from apify_client import ApifyClientAsync
-from openai import AsyncOpenAI, NotFoundError
+from openai import AsyncOpenAI
 
 from .constants import OPENAI_SUPPORTED_FILES
 from .input_model import OpenaiVectorStoreIntegration as ActorInput
@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 
 async def main() -> None:
     async with Actor:
-
         payload = await Actor.get_input()
         actor_input = ActorInput(**payload)
 
@@ -31,9 +30,7 @@ async def main() -> None:
 
         assistant = await check_inputs(client, actor_input, payload)
 
-        file_ids_to_delete = await get_vector_store_file_ids(
-            client, actor_input.vectorStoreId, actor_input.fileIdsToDelete, actor_input.filePrefix
-        )
+        file_ids_to_delete = await get_vector_store_file_ids(client, actor_input.vectorStoreId, actor_input.fileIdsToDelete, actor_input.filePrefix)
 
         # 1 - create files from dataset or from key-value store
         files_created: list[str] = []
@@ -41,7 +38,7 @@ async def main() -> None:
             files: list[FileObject] = await create_files_from_dataset(client, aclient_apify, actor_input, assistant)
             files_created.extend(f.id for f in files)
 
-        if actor_input.saveFiles and actor_input.keyValueStoreId:
+        if actor_input.saveCrawledFiles and actor_input.keyValueStoreId:
             files = await create_files_from_key_value_store(client, aclient_apify, actor_input)
             files_created.extend(f.id for f in files)
 
@@ -62,19 +59,34 @@ async def check_inputs(client: AsyncOpenAI, actor_input: ActorInput, payload: di
     """Check that provided input exists at OpenAI or at Apify."""
 
     if not (await client.beta.vector_stores.retrieve(actor_input.vectorStoreId)):
-        await Actor.fail(status_message=f"Vector Store with ID: {actor_input.vectorStoreId} was not found at the OpenAI")
+        msg = (
+            f"Unable to find the Vector Store with the ID: {actor_input.vectorStoreId} on OpenAI. Please verify that the Vector Store has "
+            f"been correctly created and that the `vectorStoreId` provided is accurate."
+        )
+        Actor.log.error(msg)
+        await Actor.fail(status_message=msg)
 
     assistant = None
     if actor_input.assistantId and not (assistant := await client.beta.assistants.retrieve(actor_input.assistantId)):
-        await Actor.fail(status_message=f"Assistant with ID: {actor_input.assistantId} was not found at the OpenAI")
+        msg = f"Unable to find the Assistant with the ID: {actor_input.assistantId} on OpenAI. "
+        "Please verify that the Assistant has been correctly created and that the `assistantId` provided is accurate. "
+        Actor.log.error(msg)
+        await Actor.fail(status_message=msg)
 
     resource = payload.get("payload", {}).get("resource", {})
     dataset_id = resource.get("defaultDatasetId") or actor_input.datasetId or ""
     key_value_store_id = resource.get("defaultKeyValueStoreId") or actor_input.keyValueStoreId or ""
 
     if not (dataset_id or key_value_store_id):
-        msg = """No Dataset ID or Key Value Store ID provided.
-        It should be provided either in payload or in actor_input."""
+        msg = (
+            "The `datasetId` or `keyValueStoreId` are not provided. There are two ways to specify the `datasetId` or `keyValueStoreId`:"
+            "1. Automatic Input: If this integration is used with other Actors, such as the Website Content Crawler, the variables should be "
+            "automatically passed in the 'payload'. Please check the `Input` payload to ensure that they are included."
+            "2. Manual Input: If you are running this Actor independently, you can to manually specify the 'datasetId' or `keyValueStoreId. "
+            "You can do this by entering the values in the 'Debug Settings' section of the Actor's input screen."
+            "Please verify that one of these options is correctly configured."
+        )
+        Actor.log.error(msg)
         await Actor.fail(status_message=msg)
 
     actor_input.datasetId = dataset_id
@@ -117,9 +129,7 @@ async def create_files_from_dataset(
     return files_created
 
 
-async def create_files_from_key_value_store(
-    client: AsyncOpenAI, aclient_apify: ApifyClientAsync, actor_input: ActorInput
-) -> list[FileObject]:
+async def create_files_from_key_value_store(client: AsyncOpenAI, aclient_apify: ApifyClientAsync, actor_input: ActorInput) -> list[FileObject]:
     """Create files from Apify key-value store."""
 
     files_created = []
@@ -129,7 +139,6 @@ async def create_files_from_key_value_store(
     Actor.log.debug("Creating files from Apify key-value store, key value store items: %s", keys.get("items", []))
 
     for item in keys.get("items", []):
-
         key = item.get("key")
         ext = f".{key.split('.')[-1]}"
         prefix = f"{actor_input.filePrefix}_{actor_input.keyValueStoreId}" if actor_input.filePrefix else f"{actor_input.keyValueStoreId}"
@@ -169,10 +178,10 @@ async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> list[
 
     https://platform.openai.com/docs/api-reference/files/delete
     """
-    files_to_delete = files_to_delete or []
     deleted_files = []
+    files_to_delete = files_to_delete or []
+    Actor.log.debug("About to delete files from OpenAI. Number of files: %s", len(files_to_delete))
 
-    Actor.log.debug("Files ids to delete: %s", files_to_delete)
     try:
         for _id in files_to_delete:
             file_ = await client.files.delete(_id)
@@ -185,9 +194,7 @@ async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> list[
     return deleted_files
 
 
-async def create_files_vector_store_and_poll(
-    client: AsyncOpenAI, vs_id: str, files_created: list[str]
-) -> VectorStoreFileBatch | None:
+async def create_files_vector_store_and_poll(client: AsyncOpenAI, vs_id: str, files_created: list[str]) -> VectorStoreFileBatch | None:
     try:
         v = await client.beta.vector_stores.file_batches.create_and_poll(vector_store_id=vs_id, file_ids=files_created)
         Actor.log.debug("Created files in vector store: %s", v)
@@ -198,13 +205,13 @@ async def create_files_vector_store_and_poll(
     return None
 
 
-async def delete_files_from_vector_store(
-    client: AsyncOpenAI, vs_id: str, file_ids: list[str]
-) -> list[VectorStoreFileDeleted]:
+async def delete_files_from_vector_store(client: AsyncOpenAI, vs_id: str, file_ids: list[str]) -> list[VectorStoreFileDeleted]:
     """Remove files from vector store. The files are not actually deleted, only removed."""
 
-    file_ids = file_ids or []
     deleted_files = []
+    file_ids = file_ids or []
+    Actor.log.debug("About to delete files from vector store. Number of files: %s", len(file_ids))
+
     try:
         for _id in file_ids:
             file_ = await client.beta.vector_stores.files.delete(_id, vector_store_id=vs_id)
@@ -219,15 +226,15 @@ async def delete_files_from_vector_store(
 async def get_files_by_prefix(client: AsyncOpenAI, file_prefix: str) -> list[str]:
     """Get files with a specific prefix from OpenAI's file store."""
 
-    files = await client.files.list()
-    return [f.id for f in files.data if f.filename.startswith(file_prefix)]
+    files = [f async for f in client.files.list()]
+    return [f.id for f in files if f.filename.startswith(file_prefix)]
 
 
 async def get_vector_store_files_by_ids(client: AsyncOpenAI, vs_id: str, file_ids: list[str]) -> list[str]:
     """Find files in vector store by file ids."""
 
-    vs_files = await client.beta.vector_stores.files.list(vector_store_id=vs_id)
-    files = [f.id for f in vs_files.data if f.id in file_ids]
+    vs_files = [f async for f in client.beta.vector_stores.files.list(vector_store_id=vs_id)]
+    files = [f.id for f in vs_files if f.id in file_ids]
 
     if set(file_ids) - set(files):
         Actor.log.warning(
@@ -240,31 +247,26 @@ async def get_vector_store_files_by_ids(client: AsyncOpenAI, vs_id: str, file_id
 
 
 async def get_vector_store_files_by_prefix(client: AsyncOpenAI, vs_id: str, file_prefix: str) -> list[str]:
-    """Find files in vector store by file prefix."""
+    """Find files in vector store by file prefix.
 
-    files = []
-    vs_files = await client.beta.vector_stores.files.list(vector_store_id=vs_id)
+    Get files with prefix from OpenAI's file store, then retrieve the files associated with the vector store and compare them.
+    """
 
-    for f in vs_files.data:
-        try:
-            file_ = await client.files.retrieve(f.id)
-            if file_.filename.startswith(file_prefix):
-                files.append(f.id)
-        except NotFoundError:  # noqa: PERF203
-            Actor.log.warning(
-                "File %s associated with vector store: %s was not found in the OpenAI Files. This "
-                "typically means that the file was deleted but is still associated with vector store."
-                "You need to solve this issue manually if desired.",
-                f.id,
-                vs_id,
-            )
+    files = await get_files_by_prefix(client, file_prefix)
+    vs_files = [f async for f in client.beta.vector_stores.files.list(vector_store_id=vs_id)]
 
-    return files
+    file_present = [f.id for f in vs_files if f.id in files]
+    for f in (f.id for f in vs_files if f.id not in files):
+        Actor.log.warning(
+            f"File {f} associated with vector store: {vs_id} was not found in the OpenAI Files. This "
+            "typically means that the file was deleted but is still associated with vector store."
+            "You need to solve this issue manually if desired.",
+        )
+
+    return file_present
 
 
-async def get_vector_store_file_ids(
-    client: AsyncOpenAI, vs_id: str, file_ids: list | None, file_prefix: str | None
-) -> list[str]:
+async def get_vector_store_file_ids(client: AsyncOpenAI, vs_id: str, file_ids: list | None, file_prefix: str | None) -> list[str]:
     """Find files in vector store, either using file_ids and/or by file prefix."""
 
     file_ids = file_ids or []
@@ -287,9 +289,7 @@ async def save_in_apify_kv_store(files_created: list[FileObject], data: list[dic
     """Save files in Apify's KV Store for the debugging purposes."""
 
     if len(files_created) != len(data):
-        Actor.log.warning(
-            "Number of files created does not match the number of data. Saving to Apify's KV store skipped"
-        )
+        Actor.log.warning("Number of files created does not match the number of data. Saving to Apify's KV store skipped")
         return
 
     try:

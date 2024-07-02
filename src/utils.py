@@ -43,8 +43,7 @@ async def split_data_if_required(data: list, encoding: tiktoken.core.Encoding) -
         return []
     if nr_tokens > OPENAI_MAX_TOKENS_PER_FILE:
         Actor.log.debug(
-            "Number of tokens in dataset tokens in dataset %s is larger than OpenAI "
-            "limit %s the data needs to be split into multiple files",
+            "Number of tokens in dataset tokens in dataset %s is larger than OpenAI limit %s the data needs to be split into multiple files",
             nr_tokens,
             OPENAI_MAX_TOKENS_PER_FILE,
         )
@@ -98,7 +97,6 @@ def split_data_into_batches(data: list, max_tokens: int, encoding: tiktoken.core
 
 
 if __name__ == "__main__":
-
     import apify_client
 
     dataset_id = "fLR7roVL7yaMXlBYW"

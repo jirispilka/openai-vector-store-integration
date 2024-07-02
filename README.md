@@ -31,7 +31,7 @@ Additional costs are associated with the use of OpenAI Assistant. Please refer t
 
 To utilize this integration, ensure you have:
 
-- An OpenAI account and an `OpenAI API token`. Create a free account at [OpenAI](https://beta.openai.com/).
+- An OpenAI account and an `OpenAI API KEY`. Create a free account at [OpenAI](https://beta.openai.com/).
 - Created an [OpenAI Vector Store](https://platform.openai.com/docs/assistants/tools/file-search/vector-stores). You will need `vectorStoreId` to run this integration.
 - Created an [OpenAI Assistant](https://platform.openai.com/docs/assistants/overview).
 
@@ -45,8 +45,8 @@ Refer to [input schema](.actor/input_schema.json) for details.
    size limit of 5,000,000 tokens (as of 2024-04-23). When necessary, the model associated with the assistant is
    utilized to count tokens and split the large file into smaller, manageable segments.
 - `datasetFields` - Array of datasetFields you want to save, e.g., `["url", "text", "metadata.title"]`.
-- `fileIdsToDelete` - Delete specified file IDs from vector store as needed.
 - `filePrefix` - Delete and create files using a filePrefix, streamlining vector store updates.
+- `fileIdsToDelete` - Delete specified file IDs from vector store as needed.
 - `datasetId`: _[Debug]_ Dataset ID (when running Actor as standalone without integration).
 - `keyValueStoreId`: _[Debug]_ Key Value Store ID (when running Actor as standalone without integration).
 - `saveInApifyKeyValueStore`: _[Debug]_ Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)
@@ -66,13 +66,53 @@ Our Actors can automatically ingest entire websites, such as customer documentat
 forums, blog posts, and other information sources to train or prompt your LLMs.
 Integrate Apify into your product and allow your customers to upload their content in minutes.
 
-## Example usage
+## Save data from Website Content Crawler to OpenAI Vector Store
+
+To use this integration, you need an OpenAI account and an `OpenAI API KEY`.
+Additionally, you need to create an OpenAI Vector Store (vectorStoreId).
+
+The Website Content Crawler can deeply crawl websites and save web page content to Apify's dataset.
+It also stores files such as PDFs, PPTXs, and DOCXs.
+A typical run crawling `https://platform.openai.com/docs/assistants/overview` includes the following dataset fields (truncated for brevity):
+
+```json
+[
+  {
+    "url": "https://platform.openai.com/docs/assistants/overview",
+    "text": "Assistants overview - OpenAI API\nThe Assistants API allows you to build AI assistants within your own applications ..."
+  },
+  {
+    "url": "https://platform.openai.com/docs/assistants/overview/step-1-create-an-assistant",
+    "text": "Assistants overview - OpenAI API\n An Assistant has instructions and can leverage models, tools, and files to respond to user queries ..."
+  }
+]
+```
+Once you have the dataset, you can store the data in the OpenAI Vector Store.
+Specify which fields you want to save to the OpenAI Vector Store, e.g., `["text", "url"]`.
 
 ```json
 {
   "assistantId": "YOUR-ASSISTANT-ID",
-  "datasetFields": ["text", "url", "metadata.title"],
-  "filePrefix": "apify_test_",
+  "datasetFields": ["text", "url"],
+  "openaiApiKey": "YOUR-OPENAI-API-KEY",
+  "vectorStoreId": "YOUR-VECTOR-STORE-ID"
+}
+```
+
+### Update existing files in the OpenAI Vector Store
+
+There are two ways to update existing files in the OpenAI Vector Store.
+You can either delete all files with a specific prefix or delete specific files by their IDs.
+It is more convenient to use the `filePrefix` parameter to delete and create files with the same prefix.
+In the first run, the integration will save all the files with the prefix `openai_assistant_`.
+In the next run, it will delete all the files with the prefix `openai_assistant_` and create new files.
+
+The settings for the integration are as follows:
+```json
+{
+  "assistantId": "YOUR-ASSISTANT-ID",
+  "datasetFields": ["text", "url"],
+  "filePrefix": "openai_assistant_",
   "openaiApiKey": "YOUR-OPENAI-API-KEY",
   "vectorStoreId": "YOUR-VECTOR-STORE-ID"
 }
