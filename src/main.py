@@ -4,6 +4,7 @@ import json
 from io import BytesIO
 from typing import TYPE_CHECKING
 
+import openai
 import tiktoken
 from apify import Actor
 from apify_client import ApifyClientAsync
@@ -58,11 +59,17 @@ async def main() -> None:
 async def check_inputs(client: AsyncOpenAI, actor_input: ActorInput, payload: dict) -> Assistant | None:
     """Check that provided input exists at OpenAI or at Apify."""
 
-    if not (await client.beta.vector_stores.retrieve(actor_input.vectorStoreId)):
+    try:
+        await client.beta.vector_stores.retrieve(actor_input.vectorStoreId)
+    except openai.NotFoundError:
         msg = (
-            f"Unable to find the Vector Store with the ID: {actor_input.vectorStoreId} on OpenAI. Please verify that the Vector Store has "
-            f"been correctly created and that the `vectorStoreId` provided is accurate."
+            f"Unable to find the OpenAI Vector Store with the ID: {actor_input.vectorStoreId}. Please verify that the Vector Store has "
+            "been correctly created and that the `vectorStoreId` provided is accurate."
         )
+        Actor.log.error(msg)
+        await Actor.fail(status_message=msg)
+    except openai.AuthenticationError:
+        msg = "The OpenAI API Key provided is invalid. Please verify that the `OPENAI_API_KEY` is correctly set."
         Actor.log.error(msg)
         await Actor.fail(status_message=msg)
 
@@ -79,7 +86,8 @@ async def check_inputs(client: AsyncOpenAI, actor_input: ActorInput, payload: di
 
     if not (dataset_id or key_value_store_id):
         msg = (
-            "The `datasetId` or `keyValueStoreId` are not provided. There are two ways to specify the `datasetId` or `keyValueStoreId`:"
+            "The Apify's `datasetId` or Apify's `keyValueStoreId` are not provided. "
+            "There are two ways to specify the `datasetId` or `keyValueStoreId`: "
             "1. Automatic Input: If this integration is used with other Actors, such as the Website Content Crawler, the variables should be "
             "automatically passed in the 'payload'. Please check the `Input` payload to ensure that they are included."
             "2. Manual Input: If you are running this Actor independently, you can to manually specify the 'datasetId' or `keyValueStoreId. "
@@ -167,7 +175,7 @@ async def create_file(client: AsyncOpenAI, filename: str, data: bytes | BytesIO)
         await Actor.push_data({"filename": filename, "file_id": file.id, "status": "created"})
         return file  # noqa: TRY300
     except Exception as e:
-        Actor.log.exception(e)
+        Actor.log.error("Failed to create OpenAI file: %s, error: %s", filename, e)
 
     return None
 

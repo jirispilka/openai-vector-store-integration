@@ -51,29 +51,18 @@ Refer to [input schema](.actor/input_schema.json) for details.
 - `datasetFields` - Array of datasetFields you want to save, e.g., `["url", "text", "metadata.title"]`.
 - `filePrefix` - Delete and create files using a filePrefix, streamlining vector store updates.
 - `fileIdsToDelete` - Delete specified file IDs from vector store as needed.
-- `datasetId`: _[Debug]_ Dataset ID (when running Actor as standalone without integration).
-- `keyValueStoreId`: _[Debug]_ Key Value Store ID (when running Actor as standalone without integration).
+- `datasetId`: _[Debug]_ Apify's Dataset ID (when running Actor as standalone without integration).
+- `keyValueStoreId`: _[Debug]_ Apify's Key Value Store ID (when running Actor as standalone without integration).
 - `saveInApifyKeyValueStore`: _[Debug]_ Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)
 
 ## Outputs
 
 This integration saves selected `datasetFields` from your Actor to the OpenAI Assistant and optionally to Actor Key Value Storage (useful for debugging).
 
-## Want to talk to other devs or get help?
-
-Join our [developer community on Discord](https://discord.com/invite/jyEM2PRvMU) to connect with others and discuss this and other integrations.
-
-## Need data for your LLMs?
-
-Utilize the Apify platform to [gather data for your large language models](https://apify.com/data-for-generative-ai).
-Our Actors can automatically ingest entire websites, such as customer documentation, knowledge bases, help centers,
-forums, blog posts, and other information sources to train or prompt your LLMs.
-Integrate Apify into your product and allow your customers to upload their content in minutes.
-
 ## Save data from Website Content Crawler to OpenAI Vector Store
 
 To use this integration, you need an OpenAI account and an `OpenAI API KEY`.
-Additionally, you need to create an OpenAI Vector Store (vectorStoreId).
+Additionally, you need to create an OpenAI Vector Store (`vectorStoreId`).
 
 The Website Content Crawler can deeply crawl websites and save web page content to Apify's dataset.
 It also stores files such as PDFs, PPTXs, and DOCXs.
@@ -117,6 +106,45 @@ The settings for the integration are as follows:
   "assistantId": "YOUR-ASSISTANT-ID",
   "datasetFields": ["text", "url"],
   "filePrefix": "openai_assistant_",
+  "openaiApiKey": "YOUR-OPENAI-API-KEY",
+  "vectorStoreId": "YOUR-VECTOR-STORE-ID"
+}
+```
+
+### Save Amazon Products to OpenAI Vector Store
+
+You can also save Amazon products to the OpenAI Vector Store.
+Again, you need to have an OpenAI account and an `OpenAI API KEY` with a created OpenAI Vector Store (`vectorStoreId`).
+
+To scrape Amazon products, you can use the [Amazon Product Scraper](https://apify.com/junglee/amazon-crawler) Actor.
+
+Let's say that you want to scrape "Apple Watch" and store all the scraped data in the OpenAI Assistant.
+For the product URL `https://www.amazon.com/s?k=apple+watch`, the scraper can yield the following results (truncated for brevity):
+
+```json
+[
+  {
+    "title": "Apple Watch Ultra 2 [GPS + Cellular 49mm] Smartwatch with Rugged Titanium Case ....",
+    "asin": "B0CSVGK51Y",
+    "brand": "Apple",
+    "stars": 4.7,
+    "reviewsCount": 357,
+    "thumbnailImage": "https://m.media-amazon.com/images/I/81pjcQFaDJL.__AC_SY445_SX342_QL70_FMwebp_.jpg",
+    "price": {
+      "value": 794,
+      "currency": "$"
+    },
+    "url": "https://www.amazon.com/dp/B0CSVGK51Y"
+  }
+]
+```
+
+You can easily save the data to the OpenAI Vector Store by creating an integration (in the Amazon Product Scraper integration section) and specifying the fields you want to save:
+
+```json
+{
+  "assistantId": "YOUR-ASSISTANT-ID",
+  "datasetFields": ["title", "brand", "stars", "reviewsCount", "thumbnailImage", "price.value", "price.currency", "url"],
   "openaiApiKey": "YOUR-OPENAI-API-KEY",
   "vectorStoreId": "YOUR-VECTOR-STORE-ID"
 }
