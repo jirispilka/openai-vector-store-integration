@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.2 (2024-10-09)
+
+- Add emojis to the README.md file.
+- Add examples how to use the integration with OpenAI Assistant.
+
 ## 0.2.1 (2024-07-02)
 
 - Fix issue with pagination when listing files in the OpenAI Assistant.
