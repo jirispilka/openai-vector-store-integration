@@ -15,7 +15,7 @@ You can easily run the [OpenAI Vector Store Integration](https://apify.com/jiri.
 
 Read a detailed guide in [How we built an enterprise support assistant using OpenAI and the Apify platform](https://blog.apify.com/enterprise-support-openai-assistant/).
 
-## How does OpenAI Assistant Integration work?
+## ֎ How does OpenAI Assistant Integration work?
 
 Data for the Vector Store and Assistant are provided by various [Apify actors](https://apify.com/store) and includes web content, Docx, Pdf, Pptx, and other files.
 
@@ -27,19 +27,22 @@ The integration process includes:
 - Adding the newly created files to the vector store.
 - _[Optional]_ Deleting existing files from the OpenAI files (specified by `fileIdsToDelete` and/or `filePrefix`)
 
-## How much does it cost?
+## 💰 How much does it cost?
+
 Find the average usage cost for this actor on the [pricing page](https://apify.com/pricing) under the `Which plan do I need?` section.
 Additional costs are associated with the use of OpenAI Assistant. Please refer to their [pricing](https://openai.com/pricing) for details.
 
-## Before you start
+Since the integration is designed to upload entire dataset as a OpenAI file, the cost is minimal, typically less than $0.01 per run.
 
-To utilize this integration, ensure you have:
+## ✅ Before you start
+
+To use this integration, ensure you have:
 
 - An OpenAI account and an `OpenAI API KEY`. Create a free account at [OpenAI](https://beta.openai.com/).
 - Created an [OpenAI Vector Store](https://platform.openai.com/docs/assistants/tools/file-search/vector-stores). You will need `vectorStoreId` to run this integration.
 - Created an [OpenAI Assistant](https://platform.openai.com/docs/assistants/overview).
 
-## Inputs
+## ➡️ Inputs
 
 Refer to [input schema](.actor/input_schema.json) for details.
 
@@ -55,11 +58,11 @@ Refer to [input schema](.actor/input_schema.json) for details.
 - `keyValueStoreId`: _[Debug]_ Apify's Key Value Store ID (when running Actor as standalone without integration).
 - `saveInApifyKeyValueStore`: _[Debug]_ Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)
 
-## Outputs
+## ⬅️ Outputs
 
 This integration saves selected `datasetFields` from your Actor to the OpenAI Assistant and optionally to Actor Key Value Storage (useful for debugging).
 
-## Save data from Website Content Crawler to OpenAI Vector Store
+## 💾 Save data from Website Content Crawler to OpenAI Vector Store
 
 To use this integration, you need an OpenAI account and an `OpenAI API KEY`.
 Additionally, you need to create an OpenAI Vector Store (`vectorStoreId`).
@@ -92,7 +95,7 @@ Specify which fields you want to save to the OpenAI Vector Store, e.g., `["text"
 }
 ```
 
-### Update existing files in the OpenAI Vector Store
+### 🔄 Update existing files in the OpenAI Vector Store
 
 There are two ways to update existing files in the OpenAI Vector Store.
 You can either delete all files with a specific prefix or delete specific files by their IDs.
@@ -111,7 +114,7 @@ The settings for the integration are as follows:
 }
 ```
 
-### Save Amazon Products to OpenAI Vector Store
+### 📦 Save Amazon Products to OpenAI Vector Store
 
 You can also save Amazon products to the OpenAI Vector Store.
 Again, you need to have an OpenAI account and an `OpenAI API KEY` with a created OpenAI Vector Store (`vectorStoreId`).
