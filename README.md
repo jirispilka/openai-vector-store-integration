@@ -21,7 +21,7 @@ Data for the Vector Store and Assistant are provided by various [Apify actors](h
 
 The following image illustrates the Apify-OpenAI Vector Store integration:
 
-![Apify-OpenAI Vector Store integration](https://raw.githubusercontent.com/jirispilka/openai-vector-store-integration/refs/heads/main/docs/openai-vector-store-integration.png)
+![Apify-OpenAI Vector Store integration](https://raw.githubusercontent.com/jirispilka/openai-vector-store-integration/refs/heads/main/docs/openai-vector-store-integration-2.png)
 
 The integration process includes:
 - Loading data from an Apify Actor
