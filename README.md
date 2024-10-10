@@ -13,11 +13,15 @@ Is there anything you find unclear or missing? Please don't hesitate to inform u
 
 You can easily run the [OpenAI Vector Store Integration](https://apify.com/jiri.spilka/openai-vector-store-integration) at the Apify Platform.
 
-Read a detailed guide in [How we built an enterprise support assistant using OpenAI and the Apify platform](https://blog.apify.com/enterprise-support-openai-assistant/).
+Read a detailed guide in the [documentation](https://docs.apify.com/platform/integrations/openai-assistants#save-data-into-openai-vector-store-and-use-it-in-the-assistant) or in blogpost [How we built an enterprise support assistant using OpenAI and the Apify platform](https://blog.apify.com/enterprise-support-openai-assistant/).
 
 ## ֎ How does OpenAI Assistant Integration work?
 
-Data for the Vector Store and Assistant are provided by various [Apify actors](https://apify.com/store) and includes web content, Docx, Pdf, Pptx, and other files.
+Data for the Vector Store and Assistant are provided by various [Apify actors](https://apify.com/store) and can include web content, Docx, Pdf, Pptx, and other files.
+
+The following image illustrates the Apify-OpenAI Vector Store integration:
+
+![Apify-OpenAI Vector Store integration](https://raw.githubusercontent.com/jirispilka/openai-vector-store-integration/refs/heads/main/docs/openai-vector-store-integration.png)
 
 The integration process includes:
 - Loading data from an Apify Actor
