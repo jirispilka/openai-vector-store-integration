@@ -29,17 +29,21 @@ async def main() -> None:
         client = AsyncOpenAI(api_key=actor_input.openaiApiKey)
         aclient_apify = ApifyClientAsync()
 
+        Actor.log.info("Starting OpenAI Vector Store Integration, checking inputs ...")
         assistant = await check_inputs(client, actor_input, payload)
 
+        Actor.log.info("Get existing files in the vector store")
         file_ids_to_delete = await get_vector_store_file_ids(client, actor_input.vectorStoreId, actor_input.fileIdsToDelete, actor_input.filePrefix)
 
         # 1 - create files from dataset or from key-value store
         files_created: list[str] = []
         if actor_input.datasetId:
+            Actor.log.info("Creating files from Apify's dataset")
             files: list[FileObject] = await create_files_from_dataset(client, aclient_apify, actor_input, assistant)
             files_created.extend(f.id for f in files)
 
         if actor_input.saveCrawledFiles and actor_input.keyValueStoreId:
+            Actor.log.info("Creating files from Apify's key-value store")
             files = await create_files_from_key_value_store(client, aclient_apify, actor_input)
             files_created.extend(f.id for f in files)
 
@@ -117,7 +121,7 @@ async def create_files_from_dataset(
     data: list = dataset.items
 
     if actor_input.datasetFields:
-        Actor.log.debug("Selecting the following fields %s", actor_input.datasetFields)
+        Actor.log.info("Selecting the following fields %s", actor_input.datasetFields)
         data = [{key: get_nested_value(d, key) for key in actor_input.datasetFields} for d in data]
         data = [d for d in data if d]
 
@@ -147,24 +151,27 @@ async def create_files_from_key_value_store(client: AsyncOpenAI, aclient_apify: 
     """Create files from Apify key-value store."""
 
     files_created = []
-
+    exclusive_start_key = None
     kv_store = aclient_apify.key_value_store(str(actor_input.keyValueStoreId))
-    keys = await kv_store.list_keys()
-    Actor.log.debug("Creating files from Apify key-value store, key value store items: %s", keys.get("items", []))
 
-    for item in keys.get("items", []):
-        key = item.get("key")
-        ext = f".{key.split('.')[-1]}"
-        prefix = f"{actor_input.filePrefix}_{actor_input.keyValueStoreId}" if actor_input.filePrefix else f"{actor_input.keyValueStoreId}"
+    while keys := await kv_store.list_keys(exclusive_start_key=exclusive_start_key):
+        Actor.log.info("Creating files from Apify key-value store, key value store items: %s", len(keys.get("items", [])))
 
-        if ext in OPENAI_SUPPORTED_FILES:
-            Actor.log.debug("Get file from Apify's key value store: %s", key)
-            if d := await kv_store.get_record_as_bytes(key):
-                filename = f"{prefix}_{d['key']}"
-                if f := await create_file(client, filename, BytesIO(d["value"])):
-                    files_created.append(f)
-        else:
-            Actor.log.debug("Skipping file %s not supported by OpenAI", item.get("key"))
+        for item in keys.get("items", []):
+            key = item.get("key")
+            ext = f".{key.split('.')[-1]}"
+            prefix = f"{actor_input.filePrefix}_{actor_input.keyValueStoreId}" if actor_input.filePrefix else f"{actor_input.keyValueStoreId}"
+
+            if ext in OPENAI_SUPPORTED_FILES:
+                if d := await kv_store.get_record_as_bytes(key):
+                    filename = f"{prefix}_{d['key']}"
+                    if f := await create_file(client, filename, BytesIO(d["value"])):
+                        files_created.append(f)
+            else:
+                Actor.log.debug("Skipping file %s not supported by OpenAI", item.get("key"))
+
+        if not (exclusive_start_key := keys.get("nextExclusiveStartKey", None)):
+            return files_created
 
     return files_created
 
@@ -177,7 +184,7 @@ async def create_file(client: AsyncOpenAI, filename: str, data: bytes | BytesIO)
 
     try:
         file = await client.files.create(file=(filename, data), purpose="assistants")
-        Actor.log.debug("Created OpenAI file: %s, id: %s", file.filename, file.id)
+        Actor.log.info("Created OpenAI file: %s, id: %s", file.filename, file.id)
         await Actor.push_data({"filename": filename, "file_id": file.id, "status": "created"})
         return file  # noqa: TRY300
     except Exception as e:
@@ -194,12 +201,12 @@ async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> list[
     """
     deleted_files = []
     files_to_delete = files_to_delete or []
-    Actor.log.debug("About to delete files from OpenAI. Number of files: %s", len(files_to_delete))
+    Actor.log.info("About to delete files from OpenAI. Number of files: %s", len(files_to_delete))
 
     try:
         for _id in files_to_delete:
             file_ = await client.files.delete(_id)
-            Actor.log.debug("Deleted OpenAI File with id: %s", _id)
+            Actor.log.info("Deleted OpenAI File with id: %s", _id)
             await Actor.push_data({"filename": "", "file_id": file_.id, "status": "deleted"})
             deleted_files.append(file_)
     except Exception as e:
@@ -212,7 +219,7 @@ async def create_files_vector_store_and_poll(client: AsyncOpenAI, vs_id: str, fi
     """Create files in vector store and poll for the results. There is a limit of 500 files per batch."""
     try:
         v = await client.beta.vector_stores.file_batches.create_and_poll(vector_store_id=vs_id, file_ids=files_created)
-        Actor.log.debug("Created files in vector store: %s", v)
+        Actor.log.info("Created files in vector store: %s", v)
         return v  # noqa: TRY300
     except Exception as e:
         Actor.log.exception(e)
@@ -225,12 +232,12 @@ async def delete_files_from_vector_store(client: AsyncOpenAI, vs_id: str, file_i
 
     deleted_files = []
     file_ids = file_ids or []
-    Actor.log.debug("About to delete files from vector store. Number of files: %s", len(file_ids))
+    Actor.log.info("About to delete files from vector store. Number of files: %s", len(file_ids))
 
     try:
         for _id in file_ids:
             file_ = await client.beta.vector_stores.files.delete(_id, vector_store_id=vs_id)
-            Actor.log.debug("Removed file from vector store: %s", file_)
+            Actor.log.info("Removed file from vector store: %s", file_)
             deleted_files.append(file_)
     except Exception as e:
         Actor.log.exception(e)
