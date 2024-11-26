@@ -155,7 +155,7 @@ async def create_files_from_key_value_store(client: AsyncOpenAI, aclient_apify: 
     kv_store = aclient_apify.key_value_store(str(actor_input.keyValueStoreId))
 
     while keys := await kv_store.list_keys(exclusive_start_key=exclusive_start_key):
-        Actor.log.info("Creating files from Apify key-value store, key value store items: %s", len(keys.get("items", [])))
+        Actor.log.info("Creating files from Apify key-value store, batch of items: %s", len(keys.get("items", [])))
 
         for item in keys.get("items", []):
             key = item.get("key")
