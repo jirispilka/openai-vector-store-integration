@@ -47,7 +47,7 @@
         "saveCrawledFiles": {
             "title": "Save crawled files (docs, pdf, pptx) to OpenAI File Store",
             "type": "boolean",
-            "description": "Save files from Apify's key-value store to OpenAI's file store. Useful when utilizing Apify’s website content crawler with the 'saveFiles' option, allowing the found files to be directly store and used in the assistant.",
+            "description": "Save files from Apify's key-value store to OpenAI's file store. Useful when utilizing Apify’s website content crawler with the 'saveFiles' option, allowing the found files to be directly stored.",
             "default": true
         },
         "datasetId": {

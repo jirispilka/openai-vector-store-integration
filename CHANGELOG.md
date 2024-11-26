@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.3 (2024-11-26)
+
+- Create batch files with a maximum of 500 files in batch for vector store upload.
+- Update the README.md file with the Apify's badge.
+- Update dependencies to the latest version
+
 ## 0.2.2 (2024-10-09)
 
 - Add emojis to the README.md file.

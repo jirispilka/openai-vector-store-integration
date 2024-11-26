@@ -683,4 +683,723 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: '{"name": "unittest_vector_store_pqtnxwol"}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br
+      connection:
+      - keep-alive
+      content-length:
+      - '42'
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=gwwypmoNeFpDzAy2ynoygomyl3u1wuSJfKToQRwGh2s-1732624726-1.0.1.1-KzdcNDi2EX5BXmyoAoab2Qk5DBCmIu5_vDnFZN8a6isYKD9TTR8155dTW9qd.4LuUzMlSiv2b9NzDZlze3bNtA;
+        _cfuvid=Z4MBU4e9OGjeX96owfUgmn8E.Rt48YO.UmLkyuIHT6c-1732624726426-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      openai-beta:
+      - assistants=v2
+      user-agent:
+      - AsyncOpenAI/Python 1.55.1
+      x-stainless-arch:
+      - x64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Linux
+      x-stainless-package-version:
+      - 1.55.1
+      x-stainless-retry-count:
+      - '1'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.3
+    method: POST
+    uri: https://api.openai.com/v1/vector_stores
+  response:
+    body:
+      string: !!binary |
+        IUAGACD+Yu3rW9Ib8pmSTyyasMaawRdbd+p3/n45HTCQrCR4eNIwat6SMMHEsmxXJJH8a3T5p90L
+        mwCgMiUGzU2+3+brp+l1dvPx8lj1vjg/reN2flfQXgBQH1eaODzTxPtJzlZF/18XtUoMmnWlu5oL
+        rJRh9G656Bv8wjzymRGDSpM00G5mUa4Sr1yNGEfBaQn6gaYSOTGOL09PLk7OLs9OE8esbFTuGA1G
+        jHYSgMpOJkHskM3YedF8BWxEXaINmQ8HAMQ4CoDdnFr1KI08IsZGBrocyklNnpXfQ4xu1jRO5/qy
+        icwlSryca2sa7AwD
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e89f064ac4527a0-PRG
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - br
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Nov 2024 12:39:03 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-organization:
+      - apify-irafvf
+      openai-processing-ms:
+      - '82'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-request-id:
+      - req_5d5928132784466408904a074976e8f1
+    status:
+      code: 200
+      message: OK
+- request:
+    body: "--00b3b618596a8a837f5de28b022d73ef\r\nContent-Disposition: form-data; name=\"purpose\"\r\n\r\nassistants\r\n--00b3b618596a8a837f5de28b022d73ef\r\nContent-Disposition:
+      form-data; name=\"file\"; filename=\"unittest_vhos__file.txt\"\r\nContent-Type:
+      text/plain\r\n\r\nHello, OpenAI!\r\n--00b3b618596a8a837f5de28b022d73ef--\r\n"
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br
+      connection:
+      - keep-alive
+      content-length:
+      - '297'
+      content-type:
+      - multipart/form-data; boundary=00b3b618596a8a837f5de28b022d73ef
+      cookie:
+      - __cf_bm=gwwypmoNeFpDzAy2ynoygomyl3u1wuSJfKToQRwGh2s-1732624726-1.0.1.1-KzdcNDi2EX5BXmyoAoab2Qk5DBCmIu5_vDnFZN8a6isYKD9TTR8155dTW9qd.4LuUzMlSiv2b9NzDZlze3bNtA;
+        _cfuvid=Z4MBU4e9OGjeX96owfUgmn8E.Rt48YO.UmLkyuIHT6c-1732624726426-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      user-agent:
+      - AsyncOpenAI/Python 1.55.1
+      x-stainless-arch:
+      - x64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Linux
+      x-stainless-package-version:
+      - 1.55.1
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.3
+    method: POST
+    uri: https://api.openai.com/v1/files
+  response:
+    body:
+      string: !!binary |
+        IXwDACC+uZ++RuWeHmGFmUM5LnzCZEBucOAWZpJJxq/b8cS7jYEex9EaL7t8FREqmwZOoAlhkgfo
+        KCIknml3ta7fZprsPzbODofGJ2/+bJMoDhoGaIJhTlhMKbxFwyQPSlP46b1MRAKW6yOu+HoNkzzo
+        yUvCjX1LwNA0nMyi9nwR+KsRaBrOx6PZaDKfjPFgMXJnaEIJugce4vXtWsXQVN7zXP2VAQM=
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e89f0664e6527a0-PRG
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - br
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Nov 2024 12:39:03 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-allow-origin:
+      - '*'
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-organization:
+      - apify-irafvf
+      openai-processing-ms:
+      - '336'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-request-id:
+      - req_195a99f56977b25684c2753e8520553d
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"file_ids": ["file-GNpya5iRzbhkZZqdiyszPi"]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br
+      connection:
+      - keep-alive
+      content-length:
+      - '45'
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=nS4GEC1ji0dZfYg.6ve8mXfIyCzhWt53rKWuBJ2CWaA-1732624727-1.0.1.1-o8pFu6do7pbW0IruNphjJfE6HQlVk6qsLtPJ9gYc0L7TOhSGw0JzkojhAJANVcX5Fvlh9.3.B9rUSvzRw4YYyg;
+        _cfuvid=RJ7DxQ8hf2qJZ9yiPwwmA5nd6iC5YOyKie8Dbs5QO9g-1732624727482-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      openai-beta:
+      - assistants=v2
+      user-agent:
+      - AsyncOpenAI/Python 1.55.1
+      x-stainless-arch:
+      - x64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Linux
+      x-stainless-package-version:
+      - 1.55.1
+      x-stainless-retry-count:
+      - '1'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.3
+    method: POST
+    uri: https://api.openai.com/v1/vector_stores/vs_ZUvzJrTuDWLIjotw53kbmvFh/file_batches
+  response:
+    body:
+      string: !!binary |
+        IegEACD3v66+Jc2bvHI+KAp/AR6eHnoAWisLMGhpfK3jFb+DfRe63jCPHA8G/cLXLwWAsYcm4NAG
+        DjFsQw982XANWZYV13V8J5B9XdcVl1dF20eaAsDSSXy3cxx8tysbssDqiQ3izCeO3bmRKQ8wv/A9
+        YndogqBJoirKmizDgLazu761uCCpk2vDVZLfM7mfhs+uOfaLy2GblN2oSKmTD6twGF5WGvUWTahs
+        AehhgkBruB/poQk8y8z5Ku1wxAmV3wNs0ASBAvhTfwMD
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e89f06c78c1b357-PRG
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - br
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Nov 2024 12:39:04 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-organization:
+      - apify-irafvf
+      openai-processing-ms:
+      - '323'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-request-id:
+      - req_ba8d02f6a6738115f3072064125d21b3
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=nS4GEC1ji0dZfYg.6ve8mXfIyCzhWt53rKWuBJ2CWaA-1732624727-1.0.1.1-o8pFu6do7pbW0IruNphjJfE6HQlVk6qsLtPJ9gYc0L7TOhSGw0JzkojhAJANVcX5Fvlh9.3.B9rUSvzRw4YYyg;
+        _cfuvid=RJ7DxQ8hf2qJZ9yiPwwmA5nd6iC5YOyKie8Dbs5QO9g-1732624727482-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      openai-beta:
+      - assistants=v2
+      user-agent:
+      - AsyncOpenAI/Python 1.55.1
+      x-stainless-arch:
+      - x64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Linux
+      x-stainless-package-version:
+      - 1.55.1
+      x-stainless-poll-helper:
+      - 'true'
+      x-stainless-raw-response:
+      - 'true'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.3
+    method: GET
+    uri: https://api.openai.com/v1/vector_stores/vs_ZUvzJrTuDWLIjotw53kbmvFh/file_batches/vsfb_9a98fe49c94445ccbebf4e8885c062ae
+  response:
+    body:
+      string: !!binary |
+        IegEACD3v66+Jc2bvHI+KAp/AR6eHnoAWisLMGhpfK3jFb+DfRe63jCPHA8G/cLXLwWAsYcm4NAG
+        DjFsQw982XANWZYV13V8J5B9XdcVl1dF20eaAsDSSXy3cxx8tysbssDqiQ3izCeO3bmRKQ8wv/A9
+        YndogqBJoirKmqzAgLazu761uCCpk2vDVZLfM7mfhs+uOfaLy2GblN2oSKmTD6twGF5WGvUWTahs
+        AehhgkBruB/poQk8y8z5Ku1wxAmV3wNs0ASBAvhTfwMD
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e89f06fae93b357-PRG
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - br
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Nov 2024 12:39:05 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-organization:
+      - apify-irafvf
+      openai-processing-ms:
+      - '50'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-request-id:
+      - req_e2418521d3ee97e1072d1d97ecd94052
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=nS4GEC1ji0dZfYg.6ve8mXfIyCzhWt53rKWuBJ2CWaA-1732624727-1.0.1.1-o8pFu6do7pbW0IruNphjJfE6HQlVk6qsLtPJ9gYc0L7TOhSGw0JzkojhAJANVcX5Fvlh9.3.B9rUSvzRw4YYyg;
+        _cfuvid=RJ7DxQ8hf2qJZ9yiPwwmA5nd6iC5YOyKie8Dbs5QO9g-1732624727482-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      openai-beta:
+      - assistants=v2
+      user-agent:
+      - AsyncOpenAI/Python 1.55.1
+      x-stainless-arch:
+      - x64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Linux
+      x-stainless-package-version:
+      - 1.55.1
+      x-stainless-poll-helper:
+      - 'true'
+      x-stainless-raw-response:
+      - 'true'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.3
+    method: GET
+    uri: https://api.openai.com/v1/vector_stores/vs_ZUvzJrTuDWLIjotw53kbmvFh/file_batches/vsfb_9a98fe49c94445ccbebf4e8885c062ae
+  response:
+    body:
+      string: !!binary |
+        IeAEACCbc/kZlYsesX4gSdDy6BGfHnoA2lbSAkviuLRML/gd7LvQ9YZxe42hX/L1awBgJTEHfFw1
+        JxnLUq3CTGRhGEZCcMV1qNI0jYQb+0yhaQDgkddK3AKLErfjhRywerJ1tVOEs5soobTA/EJJwm6Y
+        g5cEfuyHSRinAdcbu92vVJ9IHVmVVPdMlpPHZ3AZ31uzUb8+3p5R0PD9o0OG5HzQqF8xh74SAFYH
+        MpLAHFzT0xgtB8944/wALthBqJ20zwNsMAfPAPgbfwMD
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e89f0775be5b357-PRG
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - br
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Nov 2024 12:39:06 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-organization:
+      - apify-irafvf
+      openai-processing-ms:
+      - '64'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-request-id:
+      - req_16c49be63197f14423ac6d8d84669f87
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=nS4GEC1ji0dZfYg.6ve8mXfIyCzhWt53rKWuBJ2CWaA-1732624727-1.0.1.1-o8pFu6do7pbW0IruNphjJfE6HQlVk6qsLtPJ9gYc0L7TOhSGw0JzkojhAJANVcX5Fvlh9.3.B9rUSvzRw4YYyg;
+        _cfuvid=RJ7DxQ8hf2qJZ9yiPwwmA5nd6iC5YOyKie8Dbs5QO9g-1732624727482-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      openai-beta:
+      - assistants=v2
+      user-agent:
+      - AsyncOpenAI/Python 1.55.1
+      x-stainless-arch:
+      - x64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Linux
+      x-stainless-package-version:
+      - 1.55.1
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.3
+    method: DELETE
+    uri: https://api.openai.com/v1/vector_stores/vs_ZUvzJrTuDWLIjotw53kbmvFh/files/file-GNpya5iRzbhkZZqdiyszPi
+  response:
+    body:
+      string: !!binary |
+        IZABACBb2/qXtFsGmodC02gyRKQN0YWglyRlqe/LALDOUQMs6o543ZjuRKydJ61a153z+l4fq0aO
+        AeCYNpRtqAEelG3jEm2rtlDUHQk5dbRRHgPSYFt2Yr8BAw==
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e89f078ce41b357-PRG
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - br
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Nov 2024 12:39:06 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-organization:
+      - apify-irafvf
+      openai-processing-ms:
+      - '203'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-request-id:
+      - req_6f15fdf1502abe7c2b9756640ee4cf5f
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=nS4GEC1ji0dZfYg.6ve8mXfIyCzhWt53rKWuBJ2CWaA-1732624727-1.0.1.1-o8pFu6do7pbW0IruNphjJfE6HQlVk6qsLtPJ9gYc0L7TOhSGw0JzkojhAJANVcX5Fvlh9.3.B9rUSvzRw4YYyg;
+        _cfuvid=RJ7DxQ8hf2qJZ9yiPwwmA5nd6iC5YOyKie8Dbs5QO9g-1732624727482-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      openai-beta:
+      - assistants=v2
+      user-agent:
+      - AsyncOpenAI/Python 1.55.1
+      x-stainless-arch:
+      - x64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Linux
+      x-stainless-package-version:
+      - 1.55.1
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.3
+    method: GET
+    uri: https://api.openai.com/v1/vector_stores/vs_ZUvzJrTuDWLIjotw53kbmvFh/files
+  response:
+    body:
+      string: !!binary |
+        IXwBACDW3PpKOi4b0qcqMl634eR1sH+T2NIsJNFIknio4UsAx37VIyigdQ8uCWDRUArWLWt9euRe
+        KHhes8+mwqme7zErBU3Na/oNAw==
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e89f08dda4eb357-PRG
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - br
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Nov 2024 12:39:09 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-organization:
+      - apify-irafvf
+      openai-processing-ms:
+      - '73'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-request-id:
+      - req_b2d024281ca45ae6164d346349b0a7f1
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=gwwypmoNeFpDzAy2ynoygomyl3u1wuSJfKToQRwGh2s-1732624726-1.0.1.1-KzdcNDi2EX5BXmyoAoab2Qk5DBCmIu5_vDnFZN8a6isYKD9TTR8155dTW9qd.4LuUzMlSiv2b9NzDZlze3bNtA;
+        _cfuvid=Z4MBU4e9OGjeX96owfUgmn8E.Rt48YO.UmLkyuIHT6c-1732624726426-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      user-agent:
+      - AsyncOpenAI/Python 1.55.1
+      x-stainless-arch:
+      - x64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Linux
+      x-stainless-package-version:
+      - 1.55.1
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.3
+    method: DELETE
+    uri: https://api.openai.com/v1/files/file-GNpya5iRzbhkZZqdiyszPi
+  response:
+    body:
+      string: !!binary |
+        IUABACD2zzn/QveON2yQWeIsKtMSjUYqyrpeATgmTZ5utMGi7nIqAjDLu3zLM9rYlj1nddaK6rjT
+        HWt1+CRVG0VzVt/r49eUXwwD
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e89f08ff9c4710d-PRG
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - br
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Nov 2024 12:39:10 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-allow-origin:
+      - '*'
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-organization:
+      - apify-irafvf
+      openai-processing-ms:
+      - '129'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-request-id:
+      - req_9bf736fbaa9b7337d697f5fb5569b8b8
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate, br
+      connection:
+      - keep-alive
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=gwwypmoNeFpDzAy2ynoygomyl3u1wuSJfKToQRwGh2s-1732624726-1.0.1.1-KzdcNDi2EX5BXmyoAoab2Qk5DBCmIu5_vDnFZN8a6isYKD9TTR8155dTW9qd.4LuUzMlSiv2b9NzDZlze3bNtA;
+        _cfuvid=Z4MBU4e9OGjeX96owfUgmn8E.Rt48YO.UmLkyuIHT6c-1732624726426-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      openai-beta:
+      - assistants=v2
+      user-agent:
+      - AsyncOpenAI/Python 1.55.1
+      x-stainless-arch:
+      - x64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Linux
+      x-stainless-package-version:
+      - 1.55.1
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.3
+    method: DELETE
+    uri: https://api.openai.com/v1/vector_stores/vs_ZUvzJrTuDWLIjotw53kbmvFh
+  response:
+    body:
+      string: !!binary |
+        IXwBACBX+/t+Je1sfnIGI/0BgDIO3Ia6Wge0p0Wphy8BwPWEBuDj2hbx4+NforuZht7meHvK4nbY
+        P+wVUgQAj8NmHm9c83g7Xtpt1WGmeTff5skRYsDtcp/J3wAD
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e89f091ec5c710d-PRG
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - br
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Nov 2024 12:39:11 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-organization:
+      - apify-irafvf
+      openai-processing-ms:
+      - '653'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-request-id:
+      - req_eebcf5fae9b04b3b83f882571e3c1059
+    status:
+      code: 200
+      message: OK
 version: 1
