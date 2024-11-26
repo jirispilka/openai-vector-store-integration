@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from io import BytesIO
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator
 
 import openai
 import tiktoken
@@ -10,7 +10,7 @@ from apify import Actor
 from apify_client import ApifyClientAsync
 from openai import AsyncOpenAI
 
-from .constants import OPENAI_SUPPORTED_FILES
+from .constants import OPENAI_FILE_BATCHES_MAX_SIZE, OPENAI_SUPPORTED_FILES
 from .input_model import OpenaiVectorStoreIntegration as ActorInput
 from .utils import get_nested_value, split_data_if_required
 
@@ -49,7 +49,13 @@ async def main() -> None:
 
         #  3 - add to vector store in batch and poll for results
         if files_created:
-            await create_files_vector_store_and_poll(client, actor_input.vectorStoreId, files_created)
+
+            def _batch(iterable: list, n: int = OPENAI_FILE_BATCHES_MAX_SIZE) -> Generator:
+                for ndx in range(0, len(iterable), n):
+                    yield iterable[ndx : min(ndx + n, len(iterable))]
+
+            for batch_files in _batch(files_created):
+                await create_files_vector_store_and_poll(client, actor_input.vectorStoreId, batch_files)
 
         # 4 - delete all files
         if file_ids_to_delete:
@@ -203,6 +209,7 @@ async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> list[
 
 
 async def create_files_vector_store_and_poll(client: AsyncOpenAI, vs_id: str, files_created: list[str]) -> VectorStoreFileBatch | None:
+    """Create files in vector store and poll for the results. There is a limit of 500 files per batch."""
     try:
         v = await client.beta.vector_stores.file_batches.create_and_poll(vector_store_id=vs_id, file_ids=files_created)
         Actor.log.debug("Created files in vector store: %s", v)

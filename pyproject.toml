@@ -8,9 +8,10 @@ version = "1.0.0"
 package-mode = false
 
 [tool.poetry.dependencies]
-apify = "^1.7.0"
-apify-client = "^1.6.4"
-openai = "^1.17.0"
+apify = "^2.0.2"
+apify-client = "^1.8.1"
+crawlee = ">=0.4.3"
+openai = "^1.51.1"
 python = "^3.12"
 tiktoken = "^0.7.0"
 python-dotenv = "^1.0.1"

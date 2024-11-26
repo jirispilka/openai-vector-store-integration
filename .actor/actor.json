@@ -3,7 +3,7 @@
     "name": "openai-assistant-files-integration",
     "title": "OpenAI Assistant Files Integration",
     "description": "The Apify OpenAI Assistant Actor allows to dynamically update the AI Assistant files.",
-    "version": "0.1",
+    "version": "0.1.1",
     "meta": {
         "templateId": "python-beautifulsoup"
     },

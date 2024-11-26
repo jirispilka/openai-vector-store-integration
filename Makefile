@@ -22,6 +22,9 @@ format:
 	poetry run ruff check --fix $(DIRS_WITH_CODE)
 	poetry run ruff format $(DIRS_WITH_CODE)
 
+test:
+	poetry run pytest --with-integration --vcr-record=none
+
 pydantic-model:
 	datamodel-codegen --input .actor/input_schema.json --output $(DIRS_WITH_CODE)/input_model.py  --input-file-type jsonschema  --field-constraints
 

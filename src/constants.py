@@ -1,3 +1,5 @@
+OPENAI_FILE_BATCHES_MAX_SIZE = 500
+
 OPENAI_SUPPORTED_FILES = {
     ".c": "text/x-c",
     ".cs": "text/x-csharp",

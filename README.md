@@ -1,10 +1,12 @@
 # OpenAI Vector Store Integration (OpenAI Assistant)
 
+[![OpenAI Vector Store Integration](https://apify.com/actor-badge?actor=jiri.spilka/openai-vector-store-integration)](https://apify.com/jiri.spilka/openai-vector-store-integration)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/jirispilka/openai-vector-store-integration/blob/main/LICENSE)
 [![Build & Unit Tests](https://github.com/jirispilka/openai-vector-store-integration/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/jirispilka/openai-vector-store-integration/actions/workflows/main.yml)
 
+
 The Apify [OpenAI Vector Store integration](https://apify.com/jiri.spilka/openai-vector-store-integration) uploads data from Apify Actors to the OpenAI Vector Store (connected to the OpenAI Assistant).
-It assumes that you have already created an [OpenAI Assistant](https://platform.openai.com/docs/assistants/overview/agents) and [OpenAI Vector Store](https://platform.openai.com/docs/assistants/tools/file-search/vector-stores) and you need to regularly update the files to provide up-to-date responses.
+It assumes that you have already created a [OpenAI Vector Store](https://platform.openai.com/docs/assistants/tools/file-search/vector-stores) and you need to regularly update the files to provide up-to-date responses.
 
 💡 **Note**: This Actor is meant to be used together with other Actors' integration sections.
 For instance, if you are using the [Website Content Crawler](https://apify.com/apify/website-content-crawler), you can activate Vector Store Files integration to save web content (including docx, pptx, pdf and other [files](https://platform.openai.com/docs/assistants/tools/file-search/supported-files)) for your OpenAI assistant.
@@ -26,7 +28,7 @@ The following image illustrates the Apify-OpenAI Vector Store integration:
 The integration process includes:
 - Loading data from an Apify Actor
 - Processing the data to comply with OpenAI Assistant limits (max. 1000 files, max 5,000,000 tokens)
-- Creating OpenAI files [OpenAI Files](https://platform.openai.com/docs/api-reference/files)
+- Creating [OpenAI Files](https://platform.openai.com/docs/api-reference/files)
 - _[Optional]_ Removing existing files from the Vector Store (specified by `fileIdsToDelete` and/or `filePrefix`)
 - Adding the newly created files to the vector store.
 - _[Optional]_ Deleting existing files from the OpenAI files (specified by `fileIdsToDelete` and/or `filePrefix`)
@@ -44,7 +46,7 @@ To use this integration, ensure you have:
 
 - An OpenAI account and an `OpenAI API KEY`. Create a free account at [OpenAI](https://beta.openai.com/).
 - Created an [OpenAI Vector Store](https://platform.openai.com/docs/assistants/tools/file-search/vector-stores). You will need `vectorStoreId` to run this integration.
-- Created an [OpenAI Assistant](https://platform.openai.com/docs/assistants/overview).
+- _[Optional]_ Created an [OpenAI Assistant](https://platform.openai.com/docs/assistants/overview).
 
 ## ➡️ Inputs
 
