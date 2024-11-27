@@ -120,7 +120,7 @@ The settings for the integration are as follows:
 }
 ```
 
-### 📦 Save Amazon Products to OpenAI Vector Store
+## 📦 Save Amazon Products to OpenAI Vector Store
 
 You can also save Amazon products to the OpenAI Vector Store.
 Again, you need to have an OpenAI account and an `OpenAI API KEY` with a created OpenAI Vector Store (`vectorStoreId`).
@@ -158,3 +158,8 @@ You can easily save the data to the OpenAI Vector Store by creating an integrati
   "vectorStoreId": "YOUR-VECTOR-STORE-ID"
 }
 ```
+
+## ⓘ Limitations
+
+- Crawled files, such as PDFs, PPTXs, and DOCXs, are saved in the OpenAI Vector Store as single files and uploaded one by one. While this approach is inefficient, it allows for better error handling and the ability to log detailed error messages.
+- OpenAI can process text-based PDF files but cannot handle PDF images or scanned PDFs. For the latter, you need to use OCR to extract text from images.
