@@ -37,6 +37,6 @@ jobs:
         run: make type-check
 
       - name: Tests (unit)
-        run: poetry run pytest --with-integration --vcr-record=none
+        run: make test
         env:
           OPENAI_API_KEY: "dummy-key"

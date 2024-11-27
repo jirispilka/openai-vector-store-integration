@@ -23,6 +23,16 @@ async def empty(args, **kwargs) -> None:  # type: ignore
     ...
 
 
+async def mock_create_and_poll(*args, **kwargs):  # type: ignore  # noqa: ANN201
+    class MockVectorStoreFile:
+        def __init__(self) -> None:
+            self.status = "completed"
+            self.id = "test_file_id"
+            self.last_error = ""
+
+    return MockVectorStoreFile()
+
+
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.vcr(filter_headers=["Authorization"])
@@ -53,13 +63,13 @@ async def test_openai_files_integration(monkeypatch) -> None:  # type: ignore
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
-async def test_create_files_from_key_value_store(monkeypatch, vector_store_fixture) -> None:  # type: ignore
+async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: ignore
     # Mock the AsyncOpenAI and ApifyClientAsync objects
 
     monkeypatch.setattr(Actor, "push_data", empty)
 
     actor_input = ActorInput(  # type: ignore
-        vectorStoreId=vector_store_fixture.id,
+        vectorStoreId="xyz",
         openaiApiKey="test_openai_api_key",
         filePrefix="unittest_",
         datasetFields=["text"],
@@ -70,6 +80,8 @@ async def test_create_files_from_key_value_store(monkeypatch, vector_store_fixtu
     mock_apify.key_value_store.return_value.get_record_as_bytes = AsyncMock(
         return_value={"key": "test_file.pdf", "value": b"test_pdf_value"}
     )
+    # create mock for VectorStoreFile
+    monkeypatch.setattr(client.beta.vector_stores.files, "create_and_poll", mock_create_and_poll)
 
     # Call the function with the mock objects
     files_created = await create_files_from_key_value_store(client, mock_apify, actor_input)
@@ -94,12 +106,12 @@ async def test_create_files_from_key_value_store(monkeypatch, vector_store_fixtu
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
-async def test_create_files_from_dataset(monkeypatch, vector_store_fixture) -> None:  # type: ignore  # noqa: ANN001
+async def test_create_files_from_dataset(monkeypatch) -> None:  # type: ignore  # noqa: ANN001
 
     monkeypatch.setattr(Actor, "push_data", empty)
 
     actor_input = ActorInput(  # type: ignore
-        vectorStoreId=vector_store_fixture.id,
+        vectorStoreId="xyz",
         datasetId="test_dataset_id",
         datasetFields=["text"],
         openaiApiKey="test_openai_api_key",
@@ -111,9 +123,11 @@ async def test_create_files_from_dataset(monkeypatch, vector_store_fixture) -> N
             self.items = items
 
     # In your test function
-
     mock_apify = AsyncMock(spec=ApifyClientAsync)
     mock_apify.dataset.return_value.list_items = AsyncMock(return_value=MockDatasetItems([{"text": "test_text"}]))
+
+    # create mock for VectorStoreFile
+    monkeypatch.setattr(client.beta.vector_stores.files, "create_and_poll", mock_create_and_poll)
 
     # Call the function with the mock objects
     files_created = await create_files_from_dataset(client, mock_apify, actor_input)

@@ -108,5 +108,5 @@ async def test_vector_store_delete(monkeypatch, vector_store_fixture, file_fixtu
 
     # the file was deleted - it should not be in the vector store
     files = await get_vector_store_files_by_ids(client, vs.id, [file_created.id])
-    assert not files
+    assert not files, "File not deleted from vector store"
     assert file_created.id not in files, "File not deleted from vector store"
