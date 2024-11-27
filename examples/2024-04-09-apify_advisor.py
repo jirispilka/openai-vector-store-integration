@@ -62,10 +62,10 @@ for f in client.beta.assistants.files.list(assistant_id=assistant.id):
 #     client.beta.assistants.files.create(assistant_id=assistant.id, file_id=f)
 
 # delete files
-for f in client.files.list():
-    if f.filename.startswith("apify_test_") or f.filename.startswith("dataset_test_"):
-        print(f"About to delete {f.filename}")
-        client.files.delete(f.id)
+# for f in client.files.list():
+#     if f.filename.startswith("apify_test_") or f.filename.startswith("dataset_test_") or f.filename.startswith("unittest_"):
+#         print(f"About to delete {f.filename}")
+#         client.files.delete(f.id)
 
 # run thread
 thread = client.beta.threads.create()
