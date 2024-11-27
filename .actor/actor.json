@@ -37,6 +37,10 @@
                             "status": {
                                 "label": "File status",
                                 "format": "text"
+                            },
+                            "error": {
+                                "label": "Error",
+                                "format": "text"
                             }
                         }
                     }

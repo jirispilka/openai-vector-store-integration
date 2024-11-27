@@ -53,13 +53,13 @@ async def test_openai_files_integration(monkeypatch) -> None:  # type: ignore
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
-async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: ignore
+async def test_create_files_from_key_value_store(monkeypatch, vector_store_fixture) -> None:  # type: ignore
     # Mock the AsyncOpenAI and ApifyClientAsync objects
 
     monkeypatch.setattr(Actor, "push_data", empty)
 
     actor_input = ActorInput(  # type: ignore
-        vectorStoreId="jeGeD1RGQfUMtdAh3",
+        vectorStoreId=vector_store_fixture.id,
         openaiApiKey="test_openai_api_key",
         filePrefix="unittest_",
         datasetFields=["text"],
@@ -94,12 +94,12 @@ async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: 
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
-async def test_create_files_from_dataset(monkeypatch) -> None:  # type: ignore
+async def test_create_files_from_dataset(monkeypatch, vector_store_fixture) -> None:  # type: ignore  # noqa: ANN001
 
     monkeypatch.setattr(Actor, "push_data", empty)
 
     actor_input = ActorInput(  # type: ignore
-        vectorStoreId="test_vector_store_id",
+        vectorStoreId=vector_store_fixture.id,
         datasetId="test_dataset_id",
         datasetFields=["text"],
         openaiApiKey="test_openai_api_key",

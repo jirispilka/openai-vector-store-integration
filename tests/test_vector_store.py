@@ -1,4 +1,4 @@
-import time
+import asyncio
 from unittest.mock import patch
 
 import openai
@@ -19,20 +19,20 @@ load_dotenv()
 client = openai.AsyncClient()
 
 
-def print_(*args, **kwargs) -> None:  # type: ignore
+def print_(*args, **kwargs) -> None:  # type: ignore  # noqa: ANN002, ANN003
     print(args, kwargs)
 
 
-async def empty(args, **kwargs) -> None:  # type: ignore
+async def empty(args, **kwargs) -> None:  # type: ignore  # noqa: ANN003, ARG001, ANN001
     ...
 
 
-@pytest.mark.asyncio
-@pytest.mark.integration
+@pytest.mark.asyncio()
+@pytest.mark.integration()
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
-async def test_vector_store_get_by_prefix(monkeypatch, vector_store_fixture, file_fixture) -> None:  # type: ignore
+async def test_vector_store_get_by_prefix(monkeypatch, vector_store_fixture, file_fixture) -> None:  # type: ignore  # noqa: ANN001
     """Vector store and file is created using fixture. Check that file with the prefix exists"""
 
     vs = vector_store_fixture
@@ -56,12 +56,12 @@ async def test_vector_store_get_by_prefix(monkeypatch, vector_store_fixture, fil
     assert file_created.id in files, "File not found in vector store files"
 
 
-@pytest.mark.asyncio
-@pytest.mark.integration
+@pytest.mark.asyncio()
+@pytest.mark.integration()
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
-async def test_vector_store_get_by_id(monkeypatch, vector_store_fixture, file_fixture) -> None:  # type: ignore
+async def test_vector_store_get_by_id(monkeypatch, vector_store_fixture, file_fixture) -> None:  # type: ignore  # noqa: ANN001
     """Vector store and file is created using fixture. Check that file with the ID exists"""
 
     vs = vector_store_fixture
@@ -84,12 +84,12 @@ async def test_vector_store_get_by_id(monkeypatch, vector_store_fixture, file_fi
     assert file_created.id in files, "File not found in vector store files"
 
 
-@pytest.mark.asyncio
-@pytest.mark.integration
+@pytest.mark.asyncio()
+@pytest.mark.integration()
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
-async def test_vector_store_delete(monkeypatch, vector_store_fixture, file_fixture) -> None:  # type: ignore
+async def test_vector_store_delete(monkeypatch, vector_store_fixture, file_fixture) -> None:  # type: ignore  # noqa: ANN001, ARG001
     """Vector store and file is created using fixture. Check that file is deleted from vector store"""
 
     vs = vector_store_fixture
@@ -104,7 +104,7 @@ async def test_vector_store_delete(monkeypatch, vector_store_fixture, file_fixtu
     assert len(deleted_files) == 1, "File not deleted from vector store"
     assert deleted_files[0].deleted is True, "File not deleted from vector store"
 
-    time.sleep(3)
+    await asyncio.sleep(3)
 
     # the file was deleted - it should not be in the vector store
     files = await get_vector_store_files_by_ids(client, vs.id, [file_created.id])

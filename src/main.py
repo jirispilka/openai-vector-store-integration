@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from io import BytesIO
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING
 
 import openai
 import tiktoken
@@ -10,14 +10,14 @@ from apify import Actor
 from apify_client import ApifyClientAsync
 from openai import AsyncOpenAI
 
-from .constants import OPENAI_FILE_BATCHES_MAX_SIZE, OPENAI_SUPPORTED_FILES
+from .constants import OPENAI_SUPPORTED_FILES, OPENAI_VECTOR_STORE_POLLING_INTERVAL_MS
 from .input_model import OpenaiVectorStoreIntegration as ActorInput
 from .utils import get_nested_value, split_data_if_required
 
 if TYPE_CHECKING:
     from openai.types import FileDeleted
     from openai.types.beta import Assistant
-    from openai.types.beta.vector_stores import VectorStoreFileBatch, VectorStoreFileDeleted
+    from openai.types.beta.vector_stores import VectorStoreFile, VectorStoreFileBatch, VectorStoreFileDeleted
     from openai.types.file_object import FileObject
 
 
@@ -32,8 +32,9 @@ async def main() -> None:
         Actor.log.info("Starting OpenAI Vector Store Integration, checking inputs ...")
         assistant = await check_inputs(client, actor_input, payload)
 
-        Actor.log.info("Get existing files in the vector store")
+        Actor.log.info("Get existing files in the vector store, either using fileIdsToDelete and/or by filePrefix")
         file_ids_to_delete = await get_vector_store_file_ids(client, actor_input.vectorStoreId, actor_input.fileIdsToDelete, actor_input.filePrefix)
+        Actor.log.info("%d files present in vector store", len(file_ids_to_delete))
 
         # 1 - create files from dataset or from key-value store
         files_created: list[str] = []
@@ -47,21 +48,11 @@ async def main() -> None:
             files = await create_files_from_key_value_store(client, aclient_apify, actor_input)
             files_created.extend(f.id for f in files)
 
-        # 2 - remove files from vector store
+        # 2 - remove files from vector store (that were present before the new files were added)
         if file_ids_to_delete:
             await delete_files_from_vector_store(client, actor_input.vectorStoreId, file_ids_to_delete)
 
-        #  3 - add to vector store in batch and poll for results
-        if files_created:
-
-            def _batch(iterable: list, n: int = OPENAI_FILE_BATCHES_MAX_SIZE) -> Generator:
-                for ndx in range(0, len(iterable), n):
-                    yield iterable[ndx : min(ndx + n, len(iterable))]
-
-            for batch_files in _batch(files_created):
-                await create_files_vector_store_and_poll(client, actor_input.vectorStoreId, batch_files)
-
-        # 4 - delete all files
+        # 3 - delete files from OpenAi (that were present before the new files were added)
         if file_ids_to_delete:
             await delete_files(client, file_ids_to_delete)
 
@@ -135,7 +126,7 @@ async def create_files_from_dataset(
         for i, d in enumerate(data):
             prefix = f"{actor_input.filePrefix}_{actor_input.datasetId}" if actor_input.filePrefix else f"{actor_input.datasetId}"
             filename = f"{prefix}_{i}.json"
-            if f := await create_file(client, filename, json.dumps(d).encode("utf-8")):
+            if f := await create_file_and_add_to_vector_store(client, filename, json.dumps(d).encode("utf-8"), actor_input.vectorStoreId):
                 files_created.append(f)
     except Exception as e:
         Actor.log.exception(e)
@@ -165,7 +156,7 @@ async def create_files_from_key_value_store(client: AsyncOpenAI, aclient_apify: 
             if ext in OPENAI_SUPPORTED_FILES:
                 if d := await kv_store.get_record_as_bytes(key):
                     filename = f"{prefix}_{d['key']}"
-                    if f := await create_file(client, filename, BytesIO(d["value"])):
+                    if f := await create_file_and_add_to_vector_store(client, filename, BytesIO(d["value"]), actor_input.vectorStoreId):
                         files_created.append(f)
             else:
                 Actor.log.debug("Skipping file %s not supported by OpenAI", item.get("key"))
@@ -181,11 +172,9 @@ async def create_file(client: AsyncOpenAI, filename: str, data: bytes | BytesIO)
 
     https://platform.openai.com/docs/api-reference/files/create
     """
-
     try:
         file = await client.files.create(file=(filename, data), purpose="assistants")
         Actor.log.info("Created OpenAI file: %s, id: %s", file.filename, file.id)
-        await Actor.push_data({"filename": filename, "file_id": file.id, "status": "created"})
         return file  # noqa: TRY300
     except Exception as e:
         Actor.log.error("Failed to create OpenAI file: %s, error: %s", filename, e)
@@ -193,7 +182,7 @@ async def create_file(client: AsyncOpenAI, filename: str, data: bytes | BytesIO)
     return None
 
 
-async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> list[FileDeleted]:
+async def delete_files(client: AsyncOpenAI, files_to_delete: list[str], *, actor_push: bool = True) -> list[FileDeleted]:
     """
     Delete OpenAI files.
 
@@ -201,18 +190,45 @@ async def delete_files(client: AsyncOpenAI, files_to_delete: list[str]) -> list[
     """
     deleted_files = []
     files_to_delete = files_to_delete or []
-    Actor.log.info("About to delete files from OpenAI. Number of files: %s", len(files_to_delete))
-
     try:
         for _id in files_to_delete:
             file_ = await client.files.delete(_id)
-            Actor.log.info("Deleted OpenAI File with id: %s", _id)
-            await Actor.push_data({"filename": "", "file_id": file_.id, "status": "deleted"})
             deleted_files.append(file_)
+            Actor.log.info("Deleted OpenAI File with id: %s", _id)
+            if actor_push:
+                await Actor.push_data({"filename": "", "file_id": file_.id, "status": "deleted"})
     except Exception as e:
         Actor.log.exception(e)
 
     return deleted_files
+
+
+async def create_file_and_add_to_vector_store(client: AsyncOpenAI, filename: str, data: bytes | BytesIO, vector_store_id: str) -> FileObject | None:
+    """Create OpenAI file and add it to the vector store.
+
+    If the attachment to the vector store fails, the file is deleted.
+    """
+
+    if file := await create_file(client, filename, data):
+        try:
+            file_vs: VectorStoreFile = await client.beta.vector_stores.files.create_and_poll(
+                vector_store_id=vector_store_id, file_id=file.id, poll_interval_ms=OPENAI_VECTOR_STORE_POLLING_INTERVAL_MS
+            )
+            await Actor.push_data({"filename": filename, "file_id": file.id, "status": file_vs.status, "error": file_vs.last_error or ""})
+            if (file_vs.status in ("failed", "cancelled")) or file_vs.last_error:
+                Actor.log.error(
+                    "Failed to attach file to vector store: %s (this typically happens when PDF file is an image or scan), deleting OpenAI file",
+                    file_vs.last_error,
+                )
+                await delete_files(client, [file.id], actor_push=False)
+                return None
+
+            Actor.log.info("Attached file to vector store: %s", file_vs.id)
+            return file  # noqa: TRY300
+        except Exception as e:
+            Actor.log.error("Failed to create OpenAI file: %s, error: %s", filename, e)
+
+    return None
 
 
 async def create_files_vector_store_and_poll(client: AsyncOpenAI, vs_id: str, files_created: list[str]) -> VectorStoreFileBatch | None:
