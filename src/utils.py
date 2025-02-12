@@ -1,32 +1,86 @@
-import json
+from __future__ import annotations
 
-import tiktoken
+import json
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import tiktoken
+
 from apify import Actor
 
 OPENAI_MAX_FILES = 10_000
 OPENAI_MAX_TOKENS_PER_FILE = 5_000_000
 
 
-def get_nested_value(data: dict, keys: str) -> dict:
+def get_nested_value(data: dict | list | Any, keys: str) -> Any:  # noqa:PLR0912
     """
-    Extract nested value from dict.
+    Extracts a nested value from a dictionary (or list), supporting nested dicts and lists.
 
-    Example:
+    Examples:
       >>> get_nested_value({"a": "v1", "c1": {"c2": "v2"}}, "c1.c2")
       'v2'
+      >>> get_nested_value({"cards": [{"name": "card1"}, {"name": "card2"}]}, "cards[0].name")
+      'card1'
+      >>> get_nested_value({"cards": [{"name": "card1"}, {"name": "card2"}]}, "cards[:].name")
+      'card1 card2'
     """
+    # Split the key path; note that this simple split won't handle dots in keys.
+    keys_parts = keys.split(".")
+    current: Any = data
 
-    keys_l = keys.split(".")
-    result = data
-
-    for key in keys_l:
-        if key in result:
-            result = result[key]
-        else:
-            # If any of the keys are not found, return None
+    for i, part in enumerate(keys_parts):
+        if current is None:
             return {}
 
-    return result
+        # Handle list indexing if '[' and ']' are present in the key part.
+        if "[" in part and "]" in part:
+            try:
+                base, rest = part.split("[", 1)
+                index_str = rest.rstrip("]")
+            except ValueError:
+                return {}
+
+            # If there's a base key, fetch it from the current dict.
+            if base:
+                if isinstance(current, dict):
+                    current = current.get(base)
+                else:
+                    return {}
+            # At this point, current should be a list.
+            if not isinstance(current, list):
+                return {}
+
+            if index_str == ":":
+                # For a slice, process the remaining keys (if any) on each list element.
+                remaining_keys = ".".join(keys_parts[i + 1 :])
+                if remaining_keys:
+                    # Gather values from each item where the nested lookup is successful.
+                    values = [
+                        str(get_nested_value(item, remaining_keys))
+                        for item in current
+                        if get_nested_value(item, remaining_keys) not in (None, {}, "")
+                    ]
+                    return " ".join(values)
+                # If no further keys, join all items as strings.
+                return " ".join(map(str, current))
+            try:
+                idx = int(index_str)
+            except ValueError:
+                return {}
+            try:
+                current = current[idx]
+            except (IndexError, TypeError):
+                return {}
+        else:
+            # Handle simple dictionary key access.
+            try:
+                if isinstance(current, dict):
+                    current = current[part]
+                else:
+                    return {}
+            except (KeyError, TypeError):
+                return {}
+    return current
 
 
 async def split_data_if_required(data: list, encoding: tiktoken.core.Encoding) -> list:
@@ -94,20 +148,3 @@ def split_data_into_batches(data: list, max_tokens: int, encoding: tiktoken.core
         Actor.log.exception(e)
 
     return all_batches
-
-
-if __name__ == "__main__":
-    import apify_client
-
-    dataset_id = "fLR7roVL7yaMXlBYW"
-    fields = None
-
-    client_ = apify_client.ApifyClient()
-    v_ = client_.dataset(dataset_id).list_items(clean=True, fields=fields).items
-
-    encoding_ = tiktoken.encoding_for_model("gpt-3.5-turbo")
-
-    b_ = split_data_into_batches(v_, 20_000, encoding_)
-    for ii, v_ in enumerate(b_):
-        # ruff: noqa: T201
-        print(f"batch {ii}: {len(v_)}, tokens: {len(encoding_.encode(json.dumps(v_)))}")

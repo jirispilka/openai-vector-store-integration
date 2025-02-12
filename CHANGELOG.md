@@ -1,5 +1,11 @@
 # Change Log
 
+
+## 0.2.5 (2025-02-12)
+
+- Handle scenarios where the `fields` parameter is empty.
+- Enable data extraction from arrays. For example, in `datasetFields`, it is now possible to extract the name from the first item using the syntax: `item[0].name`.
+
 ## 0.2.4 (2024-11-27)
 
 - Avoid adding files to the vector store in batches, as it becomes impossible to identify failures and subsequently remove those files from OpenAI files. While this approach may be less efficient, it provides better control over which files are successfully uploaded to the OpenAI vector store.
