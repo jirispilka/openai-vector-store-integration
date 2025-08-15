@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.2.6 (2025-08-15)
+
+- Fix issue with whitespace in the input parameters.
 
 ## 0.2.5 (2025-02-12)
 
