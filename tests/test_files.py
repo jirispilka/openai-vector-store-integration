@@ -5,9 +5,14 @@ import pytest
 from apify import Actor
 from apify_client import ApifyClientAsync
 from dotenv import load_dotenv
+from pydantic import ConfigDict
 
-from src.input_model import OpenaiVectorStoreIntegration as ActorInput
+from src.input_model import OpenaiVectorStoreIntegration
 from src.main import create_file, create_files_from_dataset, create_files_from_key_value_store, delete_files
+
+
+class ActorInput(OpenaiVectorStoreIntegration):
+    model_config = ConfigDict(str_strip_whitespace = True)
 
 load_dotenv()
 
@@ -33,8 +38,8 @@ async def mock_create_and_poll(*args, **kwargs):  # type: ignore  # noqa: ANN201
     return MockVectorStoreFile()
 
 
-@pytest.mark.asyncio
-@pytest.mark.integration
+@pytest.mark.asyncio()
+@pytest.mark.integration()
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
@@ -58,8 +63,8 @@ async def test_openai_files_integration(monkeypatch) -> None:  # type: ignore
     assert file_d[0].deleted is True
 
 
-@pytest.mark.asyncio
-@pytest.mark.integration
+@pytest.mark.asyncio()
+@pytest.mark.integration()
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)
@@ -101,8 +106,8 @@ async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: 
     assert file_d[0].deleted is True
 
 
-@pytest.mark.asyncio
-@pytest.mark.integration
+@pytest.mark.asyncio()
+@pytest.mark.integration()
 @pytest.mark.vcr(filter_headers=["Authorization"])
 @patch("apify.Actor.log.debug", print_)
 @patch("apify.Actor.log.exception", print_)

@@ -9,9 +9,10 @@ import tiktoken
 from apify import Actor
 from apify_client import ApifyClientAsync
 from openai import AsyncOpenAI
+from pydantic import ConfigDict
 
 from .constants import OPENAI_SUPPORTED_FILES, OPENAI_VECTOR_STORE_POLLING_INTERVAL_MS
-from .input_model import OpenaiVectorStoreIntegration as ActorInput
+from .input_model import OpenaiVectorStoreIntegration
 from .utils import get_nested_value, split_data_if_required
 
 if TYPE_CHECKING:
@@ -19,6 +20,10 @@ if TYPE_CHECKING:
     from openai.types.beta import Assistant
     from openai.types.beta.vector_stores import VectorStoreFile, VectorStoreFileBatch, VectorStoreFileDeleted
     from openai.types.file_object import FileObject
+
+
+class ActorInput(OpenaiVectorStoreIntegration):
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 async def main() -> None:
