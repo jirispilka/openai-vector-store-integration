@@ -121,7 +121,12 @@ async def create_files_from_dataset(
         data = [{key: get_nested_value(d, key) for key in actor_input.datasetFields} for d in data]
         data = [d for d in data if d]
 
-    if encoding := assistant and tiktoken.encoding_for_model(assistant.model) or None:
+    if assistant:
+        try:
+            encoding = tiktoken.encoding_for_model(assistant.model)
+        except KeyError:
+            encoding = tiktoken.get_encoding("o200k_base")
+            Actor.log.warning("Model %s not found. Using cl200k_base encoding", assistant.model)
         data = await split_data_if_required(data, encoding)
     else:
         data = [data]
