@@ -5,7 +5,7 @@ from src.utils import get_nested_value, split_data_if_required, split_data_into_
 
 # Mock for Encoding.encode
 
-ENCODING = tiktoken.encoding_for_model("gpt-3.5-turbo")
+ENCODING = tiktoken.encoding_for_model("gpt-4-mini")
 
 
 def test_get_nested_value() -> None:

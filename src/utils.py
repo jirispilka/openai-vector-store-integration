@@ -125,7 +125,7 @@ def split_data_into_batches(data: list, max_tokens: int, encoding: tiktoken.core
 
     Example:
     >>> d = [{"name": "Alice"}, {"name": "Bob"}, {"name": "Carol"}]
-    >>> enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    >>> enc = tiktoken.encoding_for_model("gpt-5-mini")
     >>> batches = split_data_into_batches(d, 15, enc)
     >>> print(batches)
     [[{'name': 'Alice'}, {'name': 'Bob'}], [{'name': 'Carol'}]]
