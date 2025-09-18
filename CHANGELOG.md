@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.7 (2025-09-18)
+
+- Update tiktoken to support the latest models.
+
 ## 0.2.6 (2025-08-15)
 
 - Fix issue with whitespace in the input parameters.
