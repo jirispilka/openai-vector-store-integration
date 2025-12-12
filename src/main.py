@@ -18,8 +18,8 @@ from .utils import get_nested_value, split_data_if_required
 if TYPE_CHECKING:
     from openai.types import FileDeleted
     from openai.types.beta import Assistant
-    from openai.types.vector_stores import VectorStoreFile, VectorStoreFileBatch, VectorStoreFileDeleted
     from openai.types.file_object import FileObject
+    from openai.types.vector_stores import VectorStoreFile, VectorStoreFileBatch, VectorStoreFileDeleted
 
 
 class ActorInput(OpenaiVectorStoreIntegration):
