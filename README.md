@@ -9,11 +9,11 @@ The Apify [OpenAI Vector Store integration](https://apify.com/jiri.spilka/openai
 It assumes that you have already created a [OpenAI Vector Store](https://platform.openai.com/docs/assistants/tools/file-search/vector-stores) and you need to regularly update the files to provide up-to-date responses.
 
 💡 **Note**: This Actor is meant to be used together with other Actors' integration sections.
-For instance, if you are using the [Website Content Crawler](https://apify.com/apify/website-content-crawler), you can activate Vector Store Files integration to save web content (including docx, pptx, pdf and other [files](https://platform.openai.com/docs/assistants/tools/file-search/supported-files)) for your OpenAI assistant.
+For instance, if you are using the [Website Content Crawler](https://apify.com/apify/website-content-crawler), you can activate Vector Store Files integration to save web content (including docx, pptx, pdf, and other [files](https://platform.openai.com/docs/assistants/tools/file-search/supported-files)) for your OpenAI assistant.
 
 Is there anything you find unclear or missing? Please don't hesitate to inform us by creating an issue.
 
-You can easily run the [OpenAI Vector Store Integration](https://apify.com/jiri.spilka/openai-vector-store-integration) at the Apify Platform.
+You can run the [OpenAI Vector Store Integration](https://apify.com/jiri.spilka/openai-vector-store-integration) at the Apify Platform.
 
 Read a detailed guide in the [documentation](https://docs.apify.com/platform/integrations/openai-assistants#save-data-into-openai-vector-store-and-use-it-in-the-assistant) or in blogpost [How we built an enterprise support assistant using OpenAI and the Apify platform](https://blog.apify.com/enterprise-support-openai-assistant/).
 
@@ -38,7 +38,7 @@ The integration process includes:
 Find the average usage cost for this actor on the [pricing page](https://apify.com/pricing) under the `Which plan do I need?` section.
 Additional costs are associated with the use of OpenAI Assistant. Please refer to their [pricing](https://openai.com/pricing) for details.
 
-Since the integration is designed to upload entire dataset as a OpenAI file, the cost is minimal, typically less than $0.01 per run.
+Since the integration is designed to upload the entire dataset as an OpenAI file, the cost is minimal, typically less than $0.01 per run.
 
 ## ✅ Before you start
 
@@ -56,13 +56,20 @@ Refer to [input schema](.actor/input_schema.json) for details.
 - `openaiApiKey` - OpenAI API key
 - `assistantId`: The ID of an OpenAI Assistant. This parameter is required only when a file exceeds the OpenAI
    size limit of 5,000,000 tokens (as of 2024-04-23). When necessary, the model associated with the assistant is
-   utilized to count tokens and split the large file into smaller, manageable segments.
+   used to count tokens and split the large file into smaller, manageable segments.
 - `datasetFields` - Array of datasetFields you want to save, e.g., `["url", "text", "metadata.title"]`.
 - `filePrefix` - Delete and create files using a filePrefix, streamlining vector store updates.
 - `fileIdsToDelete` - Delete specified file IDs from vector store as needed.
 - `datasetId`: _[Debug]_ Apify's Dataset ID (when running Actor as standalone without integration).
 - `keyValueStoreId`: _[Debug]_ Apify's Key Value Store ID (when running Actor as standalone without integration).
 - `saveInApifyKeyValueStore`: _[Debug]_ Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)
+
+## 🔐 Permissions and access scopes
+
+When used as an integration on the Apify platform, this Actor only needs read access to your data sources:
+
+- Dataset: `resourceType` is `"dataset"` with `resourcePermissions` `["READ"]`.
+- Key-Value Store: `resourceType` is `"keyValueStore"` with `resourcePermissions` `["READ"]`.
 
 ## ⬅️ Outputs
 
@@ -148,7 +155,7 @@ For the product URL `https://www.amazon.com/s?k=apple+watch`, the scraper can yi
 ]
 ```
 
-You can easily save the data to the OpenAI Vector Store by creating an integration (in the Amazon Product Scraper integration section) and specifying the fields you want to save:
+You can save the data to the OpenAI Vector Store by creating an integration (in the Amazon Product Scraper integration section) and specifying the fields you want to save:
 
 ```json
 {

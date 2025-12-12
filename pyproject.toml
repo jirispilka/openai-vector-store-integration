@@ -2,31 +2,30 @@
 # These fields are not used by Apify, fill configs in .actor/ instead
 authors = ["jiri.spilka@apify.com"]
 description = ""
-name = "openai-assistant-files-integration"
+name = "openai-vector-store-integration"
 readme = "README.md"
 version = "0.2.5"
 package-mode = false
 
 [tool.poetry.dependencies]
-apify = "^2.0.2"
-apify-client = "^1.8.1"
-crawlee = ">=0.4.3"
-openai = "^1.51.1"
+apify = "^3.1.0"
+apify-client = "^2.3.0"
+crawlee = "^1.2.0"
+openai = "^2.11.0"
 python = "^3.12"
-tiktoken = "^0.7.0"
-python-dotenv = "^1.0.1"
+tiktoken = "^0.12.0"
+python-dotenv = "^1.2.1"
 
 [tool.poetry.group.dev.dependencies]
-datamodel-code-generator = "^0.25.5"
-ipython = "^8.23.0"
-mypy = "^1.9.0"
-pandas = "^2.2.2"
-pre-commit = "^3.7.0"
-pytest = "^8.2.0"
-pytest-asyncio = "^0.23.6"
+datamodel-code-generator = "^0.25.9"
+ipython = "^8.37.0"
+mypy = "^1.19.0"
+pandas = "^2.3.3"
+pytest = "^8.4.2"
+pytest-asyncio = "^0.23.8"
 pytest-integration-mark = "^0.2.0"
 pytest-vcr = "^1.0.2"
-ruff = "^0.3.5"
+ruff = "^0.3.7"
 
 [tool.ruff]
 line-length = 150

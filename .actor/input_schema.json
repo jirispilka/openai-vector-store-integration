@@ -5,7 +5,7 @@
     "schemaVersion": 1,
     "properties": {
         "vectorStoreId": {
-            "title": "Vector Store ID",
+            "title": "OpenAI Vector Store ID",
             "type": "string",
             "description": "Vector Store ID where the data will be stored",
             "editor": "textfield"
@@ -18,7 +18,7 @@
             "isSecret": true
         },
         "assistantId": {
-            "title": "Assistant ID",
+            "title": "OpenAI Assistant ID",
             "type": "string",
             "description": "The ID of an OpenAI Assistant. This parameter is required only when a file exceeds the OpenAI size limit of 5,000,000 tokens (as of 2024-04-23).\n\n When necessary, the model associated with the assistant is utilized to count tokens and split the large file into smaller, manageable segments.",
             "editor": "textfield"
@@ -53,15 +53,19 @@
         "datasetId": {
             "title": "Apify's Dataset ID",
             "type": "string",
-            "description": "The Dataset ID is provided automatically when the actor is set up as an integration. You can fill it in explicitly here to enable debugging of the actor",
-            "editor": "textfield",
-            "sectionCaption": "Debugging options"
+            "description": "The Dataset ID is provided automatically when the Actor is set up as an integration. You can fill it in explicitly here to enable debugging of the Actor",
+            "sectionCaption": "Debugging options",
+            "editor": "resourcePicker",
+            "resourceType": "dataset",
+            "resourcePermissions": ["READ"]
         },
         "keyValueStoreId": {
-            "title": "Apify's Key-value store ID (source for json, pdf, pptx files) ",
+            "title": "Apify's Key-value store ID (source of json, pdf, pptx files) ",
             "type": "string",
             "description": "This is the ID for the Key-value store on Apify, which serves as the data source for json, pdf, and pptx files. This ID is automatically provided when the actor is integrated. However, you can manually enter the ID here for debugging purposes.",
-            "editor": "textfield"
+            "editor": "resourcePicker",
+            "resourceType": "keyValueStore",
+            "resourcePermissions": ["READ"]
         },
         "saveInApifyKeyValueStore": {
             "title": "Save all created files in the Apify's key-value store",
