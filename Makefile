@@ -8,7 +8,6 @@ clean:
 install-dev:
 	python3 -m pip install --upgrade pip poetry
 	poetry install
-	poetry run pre-commit install
 
 lint:
 	poetry run ruff check $(DIRS_WITH_CODE)

@@ -5,8 +5,7 @@ from typing import AsyncGenerator
 import openai
 import pytest
 from dotenv import load_dotenv
-from openai.types import FileObject
-from openai.types.beta import VectorStore
+from openai.types import FileObject, VectorStore
 
 load_dotenv()
 
@@ -17,9 +16,9 @@ client = openai.AsyncClient()
 async def vector_store_fixture() -> AsyncGenerator[VectorStore, None]:
 
     suffix = "".join(random.choices(ascii_lowercase, k=8))
-    vector_store = await client.beta.vector_stores.create(name=f"unittest_vector_store_{suffix}")
+    vector_store = await client.vector_stores.create(name=f"unittest_vector_store_{suffix}")
     yield vector_store
-    await client.beta.vector_stores.delete(vector_store.id)
+    await client.vector_stores.delete(vector_store.id)
 
 
 @pytest.fixture()

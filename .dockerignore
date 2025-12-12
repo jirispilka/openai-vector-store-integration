@@ -13,6 +13,20 @@ __pycache__
 .pytest_cache
 .coverage
 .venv
+*.pyo
+*.pyd
 
 # git folder
 .git
+
+/tests
+
+# example files and data
+examples/
+data/
+
+# CI/CD and development files
+.github/
+.gitignore
+.editorconfig
+.pre-commit-config.yaml

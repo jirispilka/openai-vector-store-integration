@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.8 (2025-12-12)
+
+- Migrate vector stores API from beta to stable
+- Fix input schema validation for resource fields
+- Update dependencies
+
 ## 0.2.7 (2025-09-18)
 
 - Update tiktoken to support the latest models.

@@ -18,7 +18,7 @@ from .utils import get_nested_value, split_data_if_required
 if TYPE_CHECKING:
     from openai.types import FileDeleted
     from openai.types.beta import Assistant
-    from openai.types.beta.vector_stores import VectorStoreFile, VectorStoreFileBatch, VectorStoreFileDeleted
+    from openai.types.vector_stores import VectorStoreFile, VectorStoreFileBatch, VectorStoreFileDeleted
     from openai.types.file_object import FileObject
 
 
@@ -66,7 +66,7 @@ async def check_inputs(client: AsyncOpenAI, actor_input: ActorInput, payload: di
     """Check that provided input exists at OpenAI or at Apify."""
 
     try:
-        await client.beta.vector_stores.retrieve(actor_input.vectorStoreId)
+        await client.vector_stores.retrieve(actor_input.vectorStoreId)
     except openai.NotFoundError:
         msg = (
             f"Unable to find the OpenAI Vector Store with the ID: {actor_input.vectorStoreId}. Please verify that the Vector Store has "
@@ -221,7 +221,7 @@ async def create_file_and_add_to_vector_store(client: AsyncOpenAI, filename: str
 
     if file := await create_file(client, filename, data):
         try:
-            file_vs: VectorStoreFile = await client.beta.vector_stores.files.create_and_poll(
+            file_vs: VectorStoreFile = await client.vector_stores.files.create_and_poll(
                 vector_store_id=vector_store_id, file_id=file.id, poll_interval_ms=OPENAI_VECTOR_STORE_POLLING_INTERVAL_MS
             )
             await Actor.push_data({"filename": filename, "file_id": file.id, "status": file_vs.status, "error": file_vs.last_error or ""})
@@ -244,7 +244,7 @@ async def create_file_and_add_to_vector_store(client: AsyncOpenAI, filename: str
 async def create_files_vector_store_and_poll(client: AsyncOpenAI, vs_id: str, files_created: list[str]) -> VectorStoreFileBatch | None:
     """Create files in vector store and poll for the results. There is a limit of 500 files per batch."""
     try:
-        v = await client.beta.vector_stores.file_batches.create_and_poll(vector_store_id=vs_id, file_ids=files_created)
+        v = await client.vector_stores.file_batches.create_and_poll(vector_store_id=vs_id, file_ids=files_created)
         Actor.log.info("Created files in vector store: %s", v)
         return v  # noqa: TRY300
     except Exception as e:
@@ -262,7 +262,7 @@ async def delete_files_from_vector_store(client: AsyncOpenAI, vs_id: str, file_i
 
     try:
         for _id in file_ids:
-            file_ = await client.beta.vector_stores.files.delete(_id, vector_store_id=vs_id)
+            file_ = await client.vector_stores.files.delete(_id, vector_store_id=vs_id)
             Actor.log.info("Removed file from vector store: %s", file_)
             deleted_files.append(file_)
     except Exception as e:
@@ -281,7 +281,7 @@ async def get_files_by_prefix(client: AsyncOpenAI, file_prefix: str) -> list[str
 async def get_vector_store_files_by_ids(client: AsyncOpenAI, vs_id: str, file_ids: list[str]) -> list[str]:
     """Find files in vector store by file ids."""
 
-    vs_files = [f async for f in client.beta.vector_stores.files.list(vector_store_id=vs_id)]
+    vs_files = [f async for f in client.vector_stores.files.list(vector_store_id=vs_id)]
     files = [f.id for f in vs_files if f.id in file_ids]
 
     if set(file_ids) - set(files):
@@ -301,7 +301,7 @@ async def get_vector_store_files_by_prefix(client: AsyncOpenAI, vs_id: str, file
     """
 
     files = await get_files_by_prefix(client, file_prefix)
-    vs_files = [f async for f in client.beta.vector_stores.files.list(vector_store_id=vs_id)]
+    vs_files = [f async for f in client.vector_stores.files.list(vector_store_id=vs_id)]
 
     file_present = [f.id for f in vs_files if f.id in files]
     for f in (f.id for f in vs_files if f.id not in files):

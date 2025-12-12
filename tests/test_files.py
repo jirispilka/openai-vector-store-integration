@@ -86,7 +86,7 @@ async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: 
         return_value={"key": "test_file.pdf", "value": b"test_pdf_value"}
     )
     # create mock for VectorStoreFile
-    monkeypatch.setattr(client.beta.vector_stores.files, "create_and_poll", mock_create_and_poll)
+    monkeypatch.setattr(client.vector_stores.files, "create_and_poll", mock_create_and_poll)
 
     # Call the function with the mock objects
     files_created = await create_files_from_key_value_store(client, mock_apify, actor_input)
@@ -132,7 +132,7 @@ async def test_create_files_from_dataset(monkeypatch) -> None:  # type: ignore  
     mock_apify.dataset.return_value.list_items = AsyncMock(return_value=MockDatasetItems([{"text": "test_text"}]))
 
     # create mock for VectorStoreFile
-    monkeypatch.setattr(client.beta.vector_stores.files, "create_and_poll", mock_create_and_poll)
+    monkeypatch.setattr(client.vector_stores.files, "create_and_poll", mock_create_and_poll)
 
     # Call the function with the mock objects
     files_created = await create_files_from_dataset(client, mock_apify, actor_input)
