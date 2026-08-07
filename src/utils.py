@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    import tiktoken
-
+import tiktoken
 from apify import Actor
+
+from .constants import DEFAULT_TIKTOKEN_ENCODING
 
 OPENAI_MAX_FILES = 10_000
 OPENAI_MAX_TOKENS_PER_FILE = 5_000_000
@@ -83,14 +83,24 @@ def get_nested_value(data: dict | list | Any, keys: str) -> Any:  # noqa:PLR0912
     return current
 
 
-async def split_data_if_required(data: list, encoding: tiktoken.core.Encoding) -> list:
+async def split_data_if_required(data: list) -> list:
     """Split data if number of tokens is larger than OpenAI's limits."""
 
-    nr_tokens = len(encoding.encode(json.dumps(data)))
+    serialized = json.dumps(data)
+
+    # Cheap exact pre-check: a BPE token is never shorter than one byte, so if the serialized dataset is
+    # no larger than the per-file token limit in bytes, it cannot possibly exceed that limit in tokens.
+    # This lets us skip building the encoding (which downloads its BPE file on a cold cache) and the encode
+    # pass entirely for the common case. `tiktoken` itself is still imported at module load time above.
+    if len(serialized.encode("utf-8")) <= OPENAI_MAX_TOKENS_PER_FILE:
+        return [data]
+
+    encoding = tiktoken.get_encoding(DEFAULT_TIKTOKEN_ENCODING)
+    nr_tokens = len(encoding.encode(serialized))
     Actor.log.debug("Number of tokens in dataset %s", nr_tokens)
     if nr_tokens > OPENAI_MAX_TOKENS_PER_FILE * OPENAI_MAX_FILES:
         await Actor.fail(
-            status_message=f"Number of tokens in a dataset exceeds OpenAI Assistants limits "
+            status_message=f"Number of tokens in a dataset exceeds OpenAI's Vector Store limits "
             f"Max token per file {OPENAI_MAX_TOKENS_PER_FILE}, "
             f"max files: {OPENAI_MAX_FILES}"
         )
@@ -125,7 +135,7 @@ def split_data_into_batches(data: list, max_tokens: int, encoding: tiktoken.core
 
     Example:
     >>> d = [{"name": "Alice"}, {"name": "Bob"}, {"name": "Carol"}]
-    >>> enc = tiktoken.encoding_for_model("gpt-5-mini")
+    >>> enc = tiktoken.get_encoding("o200k_base")
     >>> batches = split_data_into_batches(d, 15, enc)
     >>> print(batches)
     [[{'name': 'Alice'}, {'name': 'Bob'}], [{'name': 'Carol'}]]

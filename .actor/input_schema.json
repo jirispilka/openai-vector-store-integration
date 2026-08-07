@@ -1,7 +1,7 @@
 {
     "title": "OpenAI Vector Store Integration",
     "type": "object",
-    "description": "Use Apify's dataset and update OpenAI Vector Store (for OpenAI Assistant V2)",
+    "description": "Use Apify's dataset to create and update an OpenAI Vector Store.",
     "schemaVersion": 1,
     "properties": {
         "vectorStoreId": {
@@ -18,10 +18,10 @@
             "isSecret": true
         },
         "assistantId": {
-            "title": "Assistant ID",
+            "title": "Assistant ID (deprecated, unused)",
             "type": "string",
-            "description": "The ID of an OpenAI Assistant. This parameter is required only when a file exceeds the OpenAI size limit of 5,000,000 tokens (as of 2024-04-23).\n\n When necessary, the model associated with the assistant is utilized to count tokens and split the large file into smaller, manageable segments.",
-            "editor": "textfield"
+            "description": "Deprecated and ignored. Previously used to look up an OpenAI Assistant's model for token counting when splitting large files. The OpenAI Assistants API is being retired (shutdown on 2026-08-26); this Actor no longer calls it. Splitting oversized files into smaller segments now happens automatically, regardless of this field. Kept only so previously saved inputs/integrations that set it continue to validate; you can safely remove it.",
+            "editor": "hidden"
         },
         "datasetFields": {
             "title": "A list of dataset fields which should be selected from the dataset",

@@ -1,11 +1,10 @@
+import json
+
 import pytest
 import tiktoken
 
-from src.utils import get_nested_value, split_data_if_required, split_data_into_batches
-
-# Mock for Encoding.encode
-
-ENCODING = tiktoken.encoding_for_model("gpt-4-mini")
+import src.utils
+from src.utils import OPENAI_MAX_TOKENS_PER_FILE, get_nested_value, split_data_if_required, split_data_into_batches
 
 
 def test_get_nested_value() -> None:
@@ -15,9 +14,15 @@ def test_get_nested_value() -> None:
     assert get_nested_value(data, "b") == {}
 
 
+@pytest.mark.integration()
 def test_split_data_into_batches() -> None:
+    """Marked `integration`: requires the real `cl100k_base` tiktoken encoding (via `encoding_for_model`),
+    which downloads its BPE file on a cold cache. The encoding is built here, inside the test, rather than
+    at module level, so plain collection/import of this module never triggers a network-dependent load.
+    """
+    encoding = tiktoken.encoding_for_model("gpt-4-mini")
     data = [{"name": "Alice"}, {"name": "Bob"}, {"name": "Carol"}]
-    batches = split_data_into_batches(data, 15, ENCODING)
+    batches = split_data_into_batches(data, 15, encoding)
     assert len(batches) == 2
     assert len(batches[0]) == 2
     assert len(batches[1]) == 1
@@ -77,13 +82,57 @@ def test_invalid_keys() -> None:
 @pytest.mark.asyncio()
 async def test_split_data_if_required_small_data() -> None:
     data = [{"name": "Alice"}]
-    result = await split_data_if_required(data, ENCODING)
+    result = await split_data_if_required(data)
     assert result == [data], "Expecting the data not to be split"
 
 
 @pytest.mark.asyncio()
-async def test_split_data_if_required_large_data() -> None:
+@pytest.mark.integration()
+async def test_split_data_if_required_large_data(monkeypatch) -> None:  # type: ignore  # noqa: ANN001
+    """Exercises the real split branch, cheaply.
 
-    data = [{"name": "Alice"}] * 1_000_000  # Large dataset
-    result = await split_data_if_required(data, ENCODING)
+    `OPENAI_MAX_TOKENS_PER_FILE` also sets the byte pre-check threshold (the pre-check reuses this same
+    constant), so monkeypatching it down to a small value lets a handful of items already exceed both the
+    byte pre-check and the real token limit. This drives `split_data_if_required` through the genuine
+    (unmocked) `tiktoken.get_encoding` + split path without tokenizing a million items, which previously
+    made this test take ~15-20s.
+
+    Marked `integration`: still requires the real `o200k_base` tiktoken encoding, which downloads its BPE
+    file on a cold cache.
+    """
+    monkeypatch.setattr(src.utils, "OPENAI_MAX_TOKENS_PER_FILE", 20)
+
+    data = [{"name": "Alice"}] * 50  # Small dataset, well over the patched 20-byte/20-token limit
+    result = await split_data_if_required(data)
+
     assert len(result) > 1, "Expecting the data to be split"
+    # Content round-trips: every input item appears in exactly one output batch, in the original order.
+    assert [item for batch in result for item in batch] == data
+
+
+@pytest.mark.integration()
+@pytest.mark.asyncio()
+async def test_split_data_if_required_large_bytes_low_token_density() -> None:
+    """Covers the ">5,000,000 serialized bytes but <=5,000,000 tokens" input class.
+
+    The byte pre-check only skips tiktoken when the serialized dataset is small enough that it *cannot*
+    exceed the token limit. A dataset that is just over the byte threshold but has a low token density
+    (e.g. ordinary repetitive English text, which tiktoken encodes at roughly one token per several bytes)
+    falls through to the real tiktoken count and must land in the `else: data = [data]` arm (a single
+    un-split batch), not the split branch. This test exercises that arm, which no other test reaches: the
+    other split tests use highly token-dense data (many small dicts) that comfortably exceeds the token
+    limit as soon as it exceeds the byte one.
+
+    Marked `integration` (like this repo's other network-touching tests) because it requires the real
+    `o200k_base` tiktoken encoding, which downloads its BPE file on a cold cache.
+    """
+    sentence = "The quick brown fox jumps over the lazy dog. "
+    text = sentence * (OPENAI_MAX_TOKENS_PER_FILE // len(sentence) + 10)  # just over the byte threshold
+    data = [{"text": text}]
+
+    serialized_bytes = len(json.dumps(data).encode("utf-8"))
+    assert serialized_bytes > OPENAI_MAX_TOKENS_PER_FILE, "Test data must exceed the byte pre-check threshold"
+
+    result = await split_data_if_required(data)
+
+    assert result == [data], "Expecting a single un-split batch: over the byte threshold but under the token limit"

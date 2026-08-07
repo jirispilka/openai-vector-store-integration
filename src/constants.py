@@ -1,5 +1,11 @@
 OPENAI_VECTOR_STORE_POLLING_INTERVAL_MS = 100
 
+# Default tiktoken encoding used to estimate token counts when splitting oversized datasets.
+# The Assistants API (and the `assistantId`-based model lookup used to pick an encoding) is being retired,
+# shutting down 2026-08-26; this is a fixed, reasonable default that previously served as the fallback when
+# a model was unknown.
+DEFAULT_TIKTOKEN_ENCODING = "o200k_base"
+
 OPENAI_SUPPORTED_FILES = {
     ".c": "text/x-c",
     ".cs": "text/x-csharp",

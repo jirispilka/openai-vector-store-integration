@@ -5,7 +5,6 @@ from io import BytesIO
 from typing import TYPE_CHECKING
 
 import openai
-import tiktoken
 from apify import Actor
 from apify_client import ApifyClientAsync
 from openai import AsyncOpenAI
@@ -17,9 +16,8 @@ from .utils import get_nested_value, split_data_if_required
 
 if TYPE_CHECKING:
     from openai.types import FileDeleted
-    from openai.types.beta import Assistant
-    from openai.types.beta.vector_stores import VectorStoreFile, VectorStoreFileBatch, VectorStoreFileDeleted
     from openai.types.file_object import FileObject
+    from openai.types.vector_stores import VectorStoreFile, VectorStoreFileBatch, VectorStoreFileDeleted
 
 
 class ActorInput(OpenaiVectorStoreIntegration):
@@ -35,7 +33,7 @@ async def main() -> None:
         aclient_apify = ApifyClientAsync()
 
         Actor.log.info("Starting OpenAI Vector Store Integration, checking inputs ...")
-        assistant = await check_inputs(client, actor_input, payload)
+        await check_inputs(client, actor_input, payload)
 
         Actor.log.info("Get existing files in the vector store, either using fileIdsToDelete and/or by filePrefix")
         file_ids_to_delete = await get_vector_store_file_ids(client, actor_input.vectorStoreId, actor_input.fileIdsToDelete, actor_input.filePrefix)
@@ -45,7 +43,7 @@ async def main() -> None:
         files_created: list[str] = []
         if actor_input.datasetId:
             Actor.log.info("Creating files from Apify's dataset")
-            files: list[FileObject] = await create_files_from_dataset(client, aclient_apify, actor_input, assistant)
+            files: list[FileObject] = await create_files_from_dataset(client, aclient_apify, actor_input)
             files_created.extend(f.id for f in files)
 
         if actor_input.saveCrawledFiles and actor_input.keyValueStoreId:
@@ -62,11 +60,11 @@ async def main() -> None:
             await delete_files(client, file_ids_to_delete)
 
 
-async def check_inputs(client: AsyncOpenAI, actor_input: ActorInput, payload: dict) -> Assistant | None:
+async def check_inputs(client: AsyncOpenAI, actor_input: ActorInput, payload: dict) -> None:
     """Check that provided input exists at OpenAI or at Apify."""
 
     try:
-        await client.beta.vector_stores.retrieve(actor_input.vectorStoreId)
+        await client.vector_stores.retrieve(actor_input.vectorStoreId)
     except openai.NotFoundError:
         msg = (
             f"Unable to find the OpenAI Vector Store with the ID: {actor_input.vectorStoreId}. Please verify that the Vector Store has "
@@ -79,12 +77,11 @@ async def check_inputs(client: AsyncOpenAI, actor_input: ActorInput, payload: di
         Actor.log.error(msg)
         await Actor.fail(status_message=msg)
 
-    assistant = None
-    if actor_input.assistantId and not (assistant := await client.beta.assistants.retrieve(actor_input.assistantId)):
-        msg = f"Unable to find the Assistant with the ID: {actor_input.assistantId} on OpenAI. "
-        "Please verify that the Assistant has been correctly created and that the `assistantId` provided is accurate. "
-        Actor.log.error(msg)
-        await Actor.fail(status_message=msg)
+    if actor_input.assistantId:
+        Actor.log.warning(
+            "The `assistantId` input field is deprecated and ignored: the OpenAI Assistants API is being retired and this Actor no "
+            "longer looks up an assistant. Oversized datasets are now split automatically regardless of `assistantId`."
+        )
 
     resource = payload.get("payload", {}).get("resource", {})
     dataset_id = resource.get("defaultDatasetId") or actor_input.datasetId or ""
@@ -105,12 +102,9 @@ async def check_inputs(client: AsyncOpenAI, actor_input: ActorInput, payload: di
 
     actor_input.datasetId = dataset_id
     actor_input.keyValueStoreId = key_value_store_id
-    return assistant
 
 
-async def create_files_from_dataset(
-    client: AsyncOpenAI, aclient_apify: ApifyClientAsync, actor_input: ActorInput, assistant: Assistant | None = None
-) -> list[FileObject]:
+async def create_files_from_dataset(client: AsyncOpenAI, aclient_apify: ApifyClientAsync, actor_input: ActorInput) -> list[FileObject]:
     """Create files in OpenAI."""
 
     dataset = await aclient_apify.dataset(str(actor_input.datasetId)).list_items(clean=True)
@@ -121,15 +115,7 @@ async def create_files_from_dataset(
         data = [{key: get_nested_value(d, key) for key in actor_input.datasetFields} for d in data]
         data = [d for d in data if d]
 
-    if assistant:
-        try:
-            encoding = tiktoken.encoding_for_model(assistant.model)
-        except KeyError:
-            encoding = tiktoken.get_encoding("o200k_base")
-            Actor.log.warning("Model %s not found. Using cl200k_base encoding", assistant.model)
-        data = await split_data_if_required(data, encoding)
-    else:
-        data = [data]
+    data = await split_data_if_required(data)
 
     files_created = []
     try:
@@ -221,7 +207,7 @@ async def create_file_and_add_to_vector_store(client: AsyncOpenAI, filename: str
 
     if file := await create_file(client, filename, data):
         try:
-            file_vs: VectorStoreFile = await client.beta.vector_stores.files.create_and_poll(
+            file_vs: VectorStoreFile = await client.vector_stores.files.create_and_poll(
                 vector_store_id=vector_store_id, file_id=file.id, poll_interval_ms=OPENAI_VECTOR_STORE_POLLING_INTERVAL_MS
             )
             await Actor.push_data({"filename": filename, "file_id": file.id, "status": file_vs.status, "error": file_vs.last_error or ""})
@@ -244,7 +230,7 @@ async def create_file_and_add_to_vector_store(client: AsyncOpenAI, filename: str
 async def create_files_vector_store_and_poll(client: AsyncOpenAI, vs_id: str, files_created: list[str]) -> VectorStoreFileBatch | None:
     """Create files in vector store and poll for the results. There is a limit of 500 files per batch."""
     try:
-        v = await client.beta.vector_stores.file_batches.create_and_poll(vector_store_id=vs_id, file_ids=files_created)
+        v = await client.vector_stores.file_batches.create_and_poll(vector_store_id=vs_id, file_ids=files_created)
         Actor.log.info("Created files in vector store: %s", v)
         return v  # noqa: TRY300
     except Exception as e:
@@ -262,7 +248,7 @@ async def delete_files_from_vector_store(client: AsyncOpenAI, vs_id: str, file_i
 
     try:
         for _id in file_ids:
-            file_ = await client.beta.vector_stores.files.delete(_id, vector_store_id=vs_id)
+            file_ = await client.vector_stores.files.delete(_id, vector_store_id=vs_id)
             Actor.log.info("Removed file from vector store: %s", file_)
             deleted_files.append(file_)
     except Exception as e:
@@ -281,7 +267,7 @@ async def get_files_by_prefix(client: AsyncOpenAI, file_prefix: str) -> list[str
 async def get_vector_store_files_by_ids(client: AsyncOpenAI, vs_id: str, file_ids: list[str]) -> list[str]:
     """Find files in vector store by file ids."""
 
-    vs_files = [f async for f in client.beta.vector_stores.files.list(vector_store_id=vs_id)]
+    vs_files = [f async for f in client.vector_stores.files.list(vector_store_id=vs_id)]
     files = [f.id for f in vs_files if f.id in file_ids]
 
     if set(file_ids) - set(files):
@@ -301,7 +287,7 @@ async def get_vector_store_files_by_prefix(client: AsyncOpenAI, vs_id: str, file
     """
 
     files = await get_files_by_prefix(client, file_prefix)
-    vs_files = [f async for f in client.beta.vector_stores.files.list(vector_store_id=vs_id)]
+    vs_files = [f async for f in client.vector_stores.files.list(vector_store_id=vs_id)]
 
     file_present = [f.id for f in vs_files if f.id in files]
     for f in (f.id for f in vs_files if f.id not in files):
