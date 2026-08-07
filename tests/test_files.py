@@ -1,3 +1,4 @@
+import json
 from unittest.mock import AsyncMock, patch
 
 import openai
@@ -7,8 +8,10 @@ from apify_client import ApifyClientAsync
 from dotenv import load_dotenv
 from pydantic import ConfigDict
 
+import src.main
+import src.utils
 from src.input_model import OpenaiVectorStoreIntegration
-from src.main import create_file, create_files_from_dataset, create_files_from_key_value_store, delete_files
+from src.main import check_inputs, create_file, create_files_from_dataset, create_files_from_key_value_store, delete_files
 
 
 class ActorInput(OpenaiVectorStoreIntegration):
@@ -86,7 +89,7 @@ async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: 
         return_value={"key": "test_file.pdf", "value": b"test_pdf_value"}
     )
     # create mock for VectorStoreFile
-    monkeypatch.setattr(client.beta.vector_stores.files, "create_and_poll", mock_create_and_poll)
+    monkeypatch.setattr(client.vector_stores.files, "create_and_poll", mock_create_and_poll)
 
     # Call the function with the mock objects
     files_created = await create_files_from_key_value_store(client, mock_apify, actor_input)
@@ -104,6 +107,69 @@ async def test_create_files_from_key_value_store(monkeypatch) -> None:  # type: 
     file_d = await delete_files(client, [str(file.id)])
     assert file_d
     assert file_d[0].deleted is True
+
+
+@pytest.mark.asyncio()
+async def test_check_inputs_with_assistant_id_logs_warning_and_never_calls_assistants_api(monkeypatch) -> None:  # type: ignore  # noqa: ANN001
+    """Regression test for the Assistants API removal.
+
+    Supplying `assistantId` must never trigger a call to `client.beta.assistants.retrieve` (the Assistants
+    API is being retired) and must instead produce a logged deprecation warning. Previously, `check_inputs`
+    called `client.beta.assistants.retrieve(actor_input.assistantId)` whenever `assistantId` was set.
+    """
+
+    actor_input = ActorInput(  # type: ignore
+        vectorStoreId="xyz",
+        openaiApiKey="test_openai_api_key",
+        datasetFields=["text"],
+        assistantId="asst_bogus_or_real_it_must_not_matter",
+    )
+
+    mock_client = AsyncMock(spec=openai.AsyncOpenAI)
+    mock_client.vector_stores.retrieve = AsyncMock(return_value=None)
+    # If the Assistants API were ever called, fail loudly rather than silently succeeding.
+    mock_client.beta.assistants.retrieve = AsyncMock(side_effect=AssertionError("client.beta.assistants.retrieve must never be called"))
+
+    warnings: list[str] = []
+    monkeypatch.setattr(Actor.log, "warning", lambda msg, *args, **kwargs: warnings.append(msg % args if args else msg))  # type: ignore
+
+    payload = {"payload": {"resource": {"defaultDatasetId": "test_dataset_id"}}}
+    await check_inputs(mock_client, actor_input, payload)
+
+    mock_client.beta.assistants.retrieve.assert_not_called()
+    assert any("assistantId" in w and "deprecated" in w for w in warnings), f"Expected a deprecation warning, got: {warnings}"
+
+
+@pytest.mark.asyncio()
+async def test_check_inputs_without_assistant_id_does_not_log_warning(monkeypatch) -> None:  # type: ignore  # noqa: ANN001
+    """Regression test for the falsy arm of the `assistantId` deprecation-warning guard.
+
+    Complements `test_check_inputs_with_assistant_id_logs_warning_and_never_calls_assistants_api`, which only
+    exercises `check_inputs` with `assistantId` set. This test covers the default path (no `assistantId`, the
+    common case for the majority of users) and confirms no deprecation warning is logged and that the rest of
+    `check_inputs` (vector-store retrieval, dataset/key-value-store id resolution) still behaves as before.
+    """
+
+    actor_input = ActorInput(  # type: ignore
+        vectorStoreId="xyz",
+        openaiApiKey="test_openai_api_key",
+        datasetFields=["text"],
+    )
+    assert actor_input.assistantId is None
+
+    mock_client = AsyncMock(spec=openai.AsyncOpenAI)
+    mock_client.vector_stores.retrieve = AsyncMock(return_value=None)
+
+    warnings: list[str] = []
+    monkeypatch.setattr(Actor.log, "warning", lambda msg, *args, **kwargs: warnings.append(msg % args if args else msg))  # type: ignore
+
+    payload = {"payload": {"resource": {"defaultDatasetId": "test_dataset_id", "defaultKeyValueStoreId": "test_kv_store_id"}}}
+    await check_inputs(mock_client, actor_input, payload)
+
+    mock_client.vector_stores.retrieve.assert_awaited_once_with("xyz")
+    assert not warnings, f"Expected no deprecation warning when assistantId is not set, got: {warnings}"
+    assert actor_input.datasetId == "test_dataset_id"
+    assert actor_input.keyValueStoreId == "test_kv_store_id"
 
 
 @pytest.mark.asyncio()
@@ -132,7 +198,7 @@ async def test_create_files_from_dataset(monkeypatch) -> None:  # type: ignore  
     mock_apify.dataset.return_value.list_items = AsyncMock(return_value=MockDatasetItems([{"text": "test_text"}]))
 
     # create mock for VectorStoreFile
-    monkeypatch.setattr(client.beta.vector_stores.files, "create_and_poll", mock_create_and_poll)
+    monkeypatch.setattr(client.vector_stores.files, "create_and_poll", mock_create_and_poll)
 
     # Call the function with the mock objects
     files_created = await create_files_from_dataset(client, mock_apify, actor_input)
@@ -150,3 +216,69 @@ async def test_create_files_from_dataset(monkeypatch) -> None:  # type: ignore  
     file_d = await delete_files(client, [str(file.id)])
     assert file_d
     assert file_d[0].deleted is True
+
+
+@pytest.mark.asyncio()
+@pytest.mark.integration()
+@patch("apify.Actor.log.debug", print_)
+async def test_create_files_from_dataset_splits_large_dataset_without_assistant_id(monkeypatch) -> None:  # type: ignore  # noqa: ANN001
+    """Regression test for unconditional splitting.
+
+    Before this change, `create_files_from_dataset` only split an oversized dataset when an `Assistant` object was
+    available (looked up via the now-removed `assistantId` -> `client.beta.assistants.retrieve` flow); without it,
+    the code took the `else: data = [data]` branch and never split, producing a single oversized file that OpenAI
+    would reject. Splitting must now happen regardless of `assistantId`.
+
+    `OPENAI_MAX_TOKENS_PER_FILE` also sets the byte pre-check threshold, so monkeypatching it down lets a small
+    dataset already exceed both the byte pre-check and the real token limit. This exercises the genuine
+    (unmocked) `split_data_if_required` path -- including the real `tiktoken.get_encoding` call -- without
+    tokenizing a million items.
+
+    Marked `integration`: still requires the real `o200k_base` tiktoken encoding, which downloads its BPE file
+    on a cold cache.
+    """
+
+    monkeypatch.setattr(Actor, "push_data", empty)
+    monkeypatch.setattr(src.utils, "OPENAI_MAX_TOKENS_PER_FILE", 20)
+
+    actor_input = ActorInput(  # type: ignore
+        vectorStoreId="xyz",
+        datasetId="test_dataset_id",
+        datasetFields=["name"],
+        openaiApiKey="test_openai_api_key",
+        filePrefix="unittest_",
+    )
+    assert actor_input.assistantId is None
+
+    class MockDatasetItems:
+        def __init__(self, items: list) -> None:
+            self.items = items
+
+    # Small dataset -- with OPENAI_MAX_TOKENS_PER_FILE patched down to 20, this is already well over both the
+    # byte pre-check threshold and the real token limit, so it exercises the genuine split path cheaply.
+    large_data = [{"name": "Alice"}] * 50
+
+    mock_apify = AsyncMock(spec=ApifyClientAsync)
+    mock_apify.dataset.return_value.list_items = AsyncMock(return_value=MockDatasetItems(large_data))
+
+    created_batches: list[list] = []
+
+    async def fake_create_file_and_add_to_vector_store(_client, _filename, data, _vector_store_id):  # type: ignore  # noqa: ANN001
+        # `data` is the JSON-serialized bytes of one batch (see create_files_from_dataset's call site);
+        # decode it back so the assertion below can check the actual split content, not just its encoding.
+        created_batches.append(json.loads(data.decode("utf-8")))
+
+        class MockFile:
+            id = f"file_{len(created_batches)}"
+
+        return MockFile()
+
+    monkeypatch.setattr(src.main, "create_file_and_add_to_vector_store", fake_create_file_and_add_to_vector_store)
+
+    files_created = await create_files_from_dataset(client, mock_apify, actor_input)
+
+    assert len(files_created) > 1, "Expected the oversized dataset to be split into multiple files even without assistantId"
+    assert len(created_batches) == len(files_created)
+    # Content round-trips: every input item ends up in exactly one output batch, in the original order --
+    # a real assertion about the split output, not just a count that trivially matches the fake's bookkeeping.
+    assert [item for batch in created_batches for item in batch] == large_data

@@ -1,15 +1,15 @@
-# OpenAI Vector Store Integration (OpenAI Assistant)
+# OpenAI Vector Store Integration
 
 [![OpenAI Vector Store Integration](https://apify.com/actor-badge?actor=jiri.spilka/openai-vector-store-integration)](https://apify.com/jiri.spilka/openai-vector-store-integration)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/jirispilka/openai-vector-store-integration/blob/main/LICENSE)
 [![Build & Unit Tests](https://github.com/jirispilka/openai-vector-store-integration/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/jirispilka/openai-vector-store-integration/actions/workflows/main.yml)
 
 
-The Apify [OpenAI Vector Store integration](https://apify.com/jiri.spilka/openai-vector-store-integration) uploads data from Apify Actors to the OpenAI Vector Store (connected to the OpenAI Assistant).
-It assumes that you have already created a [OpenAI Vector Store](https://platform.openai.com/docs/assistants/tools/file-search/vector-stores) and you need to regularly update the files to provide up-to-date responses.
+The Apify [OpenAI Vector Store integration](https://apify.com/jiri.spilka/openai-vector-store-integration) uploads data from Apify Actors to an OpenAI Vector Store.
+It assumes that you have already created an [OpenAI Vector Store](https://platform.openai.com/docs/guides/retrieval#vector-stores) and you need to regularly update the files to provide up-to-date responses.
 
 💡 **Note**: This Actor is meant to be used together with other Actors' integration sections.
-For instance, if you are using the [Website Content Crawler](https://apify.com/apify/website-content-crawler), you can activate Vector Store Files integration to save web content (including docx, pptx, pdf and other [files](https://platform.openai.com/docs/assistants/tools/file-search/supported-files)) for your OpenAI assistant.
+For instance, if you are using the [Website Content Crawler](https://apify.com/apify/website-content-crawler), you can activate Vector Store Files integration to save web content (including docx, pptx, pdf and other [files](https://platform.openai.com/docs/guides/tools-file-search#supported-files)) into your OpenAI Vector Store.
 
 Is there anything you find unclear or missing? Please don't hesitate to inform us by creating an issue.
 
@@ -17,9 +17,9 @@ You can easily run the [OpenAI Vector Store Integration](https://apify.com/jiri.
 
 Read a detailed guide in the [documentation](https://docs.apify.com/platform/integrations/openai-assistants#save-data-into-openai-vector-store-and-use-it-in-the-assistant) or in blogpost [How we built an enterprise support assistant using OpenAI and the Apify platform](https://blog.apify.com/enterprise-support-openai-assistant/).
 
-## ֎ How does OpenAI Assistant Integration work?
+## ֎ How does the OpenAI Vector Store Integration work?
 
-Data for the Vector Store and Assistant are provided by various [Apify actors](https://apify.com/store) and can include web content, Docx, Pdf, Pptx, and other files.
+Data for the Vector Store is provided by various [Apify actors](https://apify.com/store) and can include web content, Docx, Pdf, Pptx, and other files.
 
 The following image illustrates the Apify-OpenAI Vector Store integration:
 
@@ -27,16 +27,18 @@ The following image illustrates the Apify-OpenAI Vector Store integration:
 
 The integration process includes:
 - Loading data from an Apify Actor
-- Processing the data to comply with OpenAI Assistant limits (max. 1000 files, max 5,000,000 tokens)
+- Processing the data to comply with OpenAI's Vector Store limits (max. 10,000 files, max 5,000,000 tokens per file) - oversized datasets are split into multiple files automatically
 - Creating [OpenAI Files](https://platform.openai.com/docs/api-reference/files)
 - _[Optional]_ Removing existing files from the Vector Store (specified by `fileIdsToDelete` and/or `filePrefix`)
 - Adding the newly created files to the vector store.
 - _[Optional]_ Deleting existing files from the OpenAI files (specified by `fileIdsToDelete` and/or `filePrefix`)
 
+Once your data is in the Vector Store, you can query it from your own application using the [Responses API's `file_search` tool](https://platform.openai.com/docs/guides/tools-file-search), which lets a model search the vector store's files and ground its answers on your content.
+
 ## 💰 How much does it cost?
 
 Find the average usage cost for this actor on the [pricing page](https://apify.com/pricing) under the `Which plan do I need?` section.
-Additional costs are associated with the use of OpenAI Assistant. Please refer to their [pricing](https://openai.com/pricing) for details.
+Additional costs are associated with the use of OpenAI's Files and Vector Store APIs. Please refer to their [pricing](https://openai.com/pricing) for details.
 
 Since the integration is designed to upload entire dataset as a OpenAI file, the cost is minimal, typically less than $0.01 per run.
 
@@ -45,8 +47,7 @@ Since the integration is designed to upload entire dataset as a OpenAI file, the
 To use this integration, ensure you have:
 
 - An OpenAI account and an `OpenAI API KEY`. Create a free account at [OpenAI](https://beta.openai.com/).
-- Created an [OpenAI Vector Store](https://platform.openai.com/docs/assistants/tools/file-search/vector-stores). You will need `vectorStoreId` to run this integration.
-- _[Optional]_ Created an [OpenAI Assistant](https://platform.openai.com/docs/assistants/overview).
+- Created an [OpenAI Vector Store](https://platform.openai.com/docs/guides/retrieval#vector-stores). You will need `vectorStoreId` to run this integration.
 
 ## ➡️ Inputs
 
@@ -54,9 +55,6 @@ Refer to [input schema](.actor/input_schema.json) for details.
 
 - `vectorStoreId` - OpenAI Vector Store ID
 - `openaiApiKey` - OpenAI API key
-- `assistantId`: The ID of an OpenAI Assistant. This parameter is required only when a file exceeds the OpenAI
-   size limit of 5,000,000 tokens (as of 2024-04-23). When necessary, the model associated with the assistant is
-   utilized to count tokens and split the large file into smaller, manageable segments.
 - `datasetFields` - Array of datasetFields you want to save, e.g., `["url", "text", "metadata.title"]`.
 - `filePrefix` - Delete and create files using a filePrefix, streamlining vector store updates.
 - `fileIdsToDelete` - Delete specified file IDs from vector store as needed.
@@ -64,9 +62,15 @@ Refer to [input schema](.actor/input_schema.json) for details.
 - `keyValueStoreId`: _[Debug]_ Apify's Key Value Store ID (when running Actor as standalone without integration).
 - `saveInApifyKeyValueStore`: _[Debug]_ Save all created files in the Apify Key-Value Store to easily check and retrieve all files (this is typically used when debugging)
 
+⚠️ `assistantId` is **deprecated and ignored**. It previously let the Actor look up an OpenAI Assistant's model to
+pick a tokenizer for splitting oversized files. The OpenAI Assistants API is being retired (shutdown 2026-08-26), so
+this Actor no longer calls it; oversized files are now split automatically for every run, regardless of this field.
+The field is kept, hidden, in the input schema only so previously saved inputs/integrations that set it continue to
+validate - you can safely remove it from new configurations.
+
 ## ⬅️ Outputs
 
-This integration saves selected `datasetFields` from your Actor to the OpenAI Assistant and optionally to Actor Key Value Storage (useful for debugging).
+This integration saves selected `datasetFields` from your Actor to the OpenAI Vector Store and optionally to Actor Key Value Storage (useful for debugging).
 
 ## 💾 Save data from Website Content Crawler to OpenAI Vector Store
 
@@ -94,7 +98,6 @@ Specify which fields you want to save to the OpenAI Vector Store, e.g., `["text"
 
 ```json
 {
-  "assistantId": "YOUR-ASSISTANT-ID",
   "datasetFields": ["text", "url"],
   "openaiApiKey": "YOUR-OPENAI-API-KEY",
   "vectorStoreId": "YOUR-VECTOR-STORE-ID"
@@ -112,7 +115,6 @@ In the next run, it will delete all the files with the prefix `openai_assistant_
 The settings for the integration are as follows:
 ```json
 {
-  "assistantId": "YOUR-ASSISTANT-ID",
   "datasetFields": ["text", "url"],
   "filePrefix": "openai_assistant_",
   "openaiApiKey": "YOUR-OPENAI-API-KEY",
@@ -127,7 +129,7 @@ Again, you need to have an OpenAI account and an `OpenAI API KEY` with a created
 
 To scrape Amazon products, you can use the [Amazon Product Scraper](https://apify.com/junglee/amazon-crawler) Actor.
 
-Let's say that you want to scrape "Apple Watch" and store all the scraped data in the OpenAI Assistant.
+Let's say that you want to scrape "Apple Watch" and store all the scraped data in the OpenAI Vector Store.
 For the product URL `https://www.amazon.com/s?k=apple+watch`, the scraper can yield the following results (truncated for brevity):
 
 ```json
@@ -152,7 +154,6 @@ You can easily save the data to the OpenAI Vector Store by creating an integrati
 
 ```json
 {
-  "assistantId": "YOUR-ASSISTANT-ID",
   "datasetFields": ["title", "brand", "stars", "reviewsCount", "thumbnailImage", "price.value", "price.currency", "url"],
   "openaiApiKey": "YOUR-OPENAI-API-KEY",
   "vectorStoreId": "YOUR-VECTOR-STORE-ID"
@@ -163,3 +164,20 @@ You can easily save the data to the OpenAI Vector Store by creating an integrati
 
 - Crawled files, such as PDFs, PPTXs, and DOCXs, are saved in the OpenAI Vector Store as single files and uploaded one by one. While this approach is inefficient, it allows for better error handling and the ability to log detailed error messages.
 - OpenAI can process text-based PDF files but cannot handle PDF images or scanned PDFs. For the latter, you need to use OCR to extract text from images.
+
+## 🧪 Examples
+
+The [`examples/`](examples) directory contains standalone scripts demonstrating how this Vector Store can be
+consumed from an OpenAI Assistant (using the Assistants, Threads, and Runs APIs). They are kept only as
+historical reference; they are not part of this Actor's runtime and are not updated by this change.
+
+- **Already broken today**, against this project's pinned `openai ^2` SDK, for two separate reasons:
+  - `2024-04-29-blog_post_example.py`, `2024-04-18-apify_advisor_v2.py`, `2024-10-08-docs_assistant_vector_store.py`
+    call `client.beta.vector_stores.*`, a namespace removed from the SDK.
+  - `2024-04-09-create_assistant.py`, `2024-04-09-apify_advisor.py` call `client.beta.assistants.files.*`, an
+    endpoint removed from the SDK even earlier.
+- `2024-05-06-add_files.py` uses only the plain Files API (`client.files.*`) and keeps working.
+- The remaining scripts (`2024-04-11-apify_advisor_query.py`, `2024-10-08-docs_assistant_rag_web_browser.py`)
+  still run today but use the Assistants/Threads/Runs APIs, which stop working at the shutdown on 2026-08-26.
+
+To consume the Vector Store going forward, use the [Responses API's `file_search` tool](https://platform.openai.com/docs/guides/tools-file-search) instead.
